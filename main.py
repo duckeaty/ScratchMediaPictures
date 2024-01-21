@@ -815,6 +815,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         save_path = out_path + "/" + str(num_random) + image_format
         #print(save_path)
         success, image = video.read()
+        if success == False:
+            video.release()
+            return False
         p_size = image.shape
         v_width = p_size[1]
         v_height = p_size[0]

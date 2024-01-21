@@ -24,5 +24,4 @@
 
 ![QQ图片20231112074923](https://github.com/duckeaty/ScratchMediaPictures/assets/106880276/02458164-da4d-4857-812b-b552e8b524df)
 
-
-![QQ图片20231112074923](https://github.com/duckeaty/ScratchMediaPictures/assets/106880276/15ba6fc2-8ce6-456f-8e75-d78035ed834f)
+![QQ图片20231112074929](https://github.com/duckeaty/ScratchMediaPictures/assets/106880276/71da7754-fe81-4bf7-8d8a-2acf0f5deebf)

@@ -22,6 +22,7 @@
 
 其它功能自己摸索吧。
 
-![QQ图片20231112074929](https://github.com/duckeaty/ScratchMediaPictures/assets/106880276/67b4be4d-92c6-4f3b-a933-9b51c720791d)
+![QQ图片20231112074923](https://github.com/duckeaty/ScratchMediaPictures/assets/106880276/02458164-da4d-4857-812b-b552e8b524df)
+
 
 ![QQ图片20231112074923](https://github.com/duckeaty/ScratchMediaPictures/assets/106880276/15ba6fc2-8ce6-456f-8e75-d78035ed834f)

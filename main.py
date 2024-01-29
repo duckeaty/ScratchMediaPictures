@@ -674,13 +674,19 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             if isImage_success:
                 #print("提取成功！")
                 myLog.msgSignal.emit("[ " + out_path + "/1"+image_format+" ] 提取成功")
+                self.statusSignal.emit(i, "完成")
+                # self.tableWidget_lists.setItem(i, 4, QtWidgets.QTableWidgetItem("1/1"))
+                video_list_data[i][6] = "完成"
             else:
                 #print("提取失败！")
                 myLog.msgSignal.emit("[ " + out_path + "/1"+image_format+" ] 提取失败")
+                self.statusSignal.emit(i, "失败")
+                # self.tableWidget_lists.setItem(i, 4, QtWidgets.QTableWidgetItem("1/1"))
+                video_list_data[i][6] = "失败"
             # 状态栏更新
-            self.statusSignal.emit(i,"完成")
+            #self.statusSignal.emit(i,"完成")
             #self.tableWidget_lists.setItem(i, 4, QtWidgets.QTableWidgetItem("1/1"))
-            video_list_data[i][6] = "完成"
+            #video_list_data[i][6] = "完成"
             QtWidgets.QApplication.processEvents()
         return True
 
@@ -720,13 +726,19 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             if isImage_success:
                 #print("提取成功！")
                 myLog.msgSignal.emit("[ " + out_path + "/" + str(temp_nums) +image_format+" ] 提取成功")
+                self.statusSignal.emit(i, "成功\n帧" + str(temp_nums))
+                # self.tableWidget_lists.setItem(i, 4, QtWidgets.QTableWidgetItem("1/1"))
+                video_list_data[i][6] = "成功\n帧" + str(temp_nums)
             else:
                 #print("提取失败！")
                 myLog.msgSignal.emit("[ " + out_path + "/" + str(temp_nums) +image_format+" ] 提取失败")
+                self.statusSignal.emit(i, "失败\n帧" + str(temp_nums))
+                # self.tableWidget_lists.setItem(i, 4, QtWidgets.QTableWidgetItem("1/1"))
+                video_list_data[i][6] = "失败\n帧" + str(temp_nums)
             # 状态栏更新
-            self.statusSignal.emit(i,"成功\n帧"+str(temp_nums))
+            #self.statusSignal.emit(i,"成功\n帧"+str(temp_nums))
             #self.tableWidget_lists.setItem(i, 4, QtWidgets.QTableWidgetItem("1/1"))
-            video_list_data[i][6] = "成功\n帧"+str(temp_nums)
+            #video_list_data[i][6] = "成功\n帧"+str(temp_nums)
             QtWidgets.QApplication.processEvents()
         return True
 
@@ -762,6 +774,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         global video_list_data
         out_path = self.getOutPath()
         image_format = self.get_image_format()
+        num_success = 0
+        num_failed = 0
         #if isStart == 0:
         #    print("暂停！")
         #    return True
@@ -792,9 +806,11 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             frame_random_num = self.getRandom(limit_frame1, limit_frame2)
             isImage_success = self.getImage(ori_path, out_path, frame_random_num, image_format)
             if isImage_success:
+                num_success = num_success + 1
                 #print("第 " + str(j + 1) + " 张提取成功！")
                 myLog.msgSignal.emit("第 "+str(j+1)+" 张: [ " + out_path +"/"+ str(frame_random_num) + image_format+" ] 提取成功")
             else:
+                num_failed = num_failed + 1
                 #print("第 " + str(j + 1) + " 张提取失败！")
                 myLog.msgSignal.emit("第 "+str(j+1)+" 张: [ " + out_path +"/"+ str(frame_random_num) + image_format+" ] 提取失败")
             # 状态栏更新
@@ -804,9 +820,10 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             video_list_data[i][6] = str(j) + "/" + str(perVideo_frames)
             if perVideo_frames == j + 1:
                 #self.changeStatus(i,"完成\n" + str(perVideo_frames))
-                self.statusSignal.emit(i,"完成\n" + str(perVideo_frames))
-                myLog.msgSignal.emit("[ " + out_path +" ] 成功提取"+str(perVideo_frames)+"张")
-                video_list_data[i][6] = "完成\n" + str(perVideo_frames)
+                #self.statusSignal.emit(i, "完成\n" + str(perVideo_frames))
+                self.statusSignal.emit(i,"完成\n" + str(num_success) + "/" + str(perVideo_frames))
+                myLog.msgSignal.emit("[ " + out_path +" ] 成功提取"+str(num_success) + "/" + str(perVideo_frames) + "张")
+                video_list_data[i][6] = "完成\n" + str(num_success) + "/" + str(perVideo_frames)
             QtWidgets.QApplication.processEvents()
 
     def getImage(self, ori_path, out_path, num_random, image_format):

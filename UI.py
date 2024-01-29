@@ -233,7 +233,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "视频帧提取器"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "视频帧提取器v1.2"))
         self.groupBox.setTitle(_translate("MainWindow", "视频列表"))
         item = self.tableWidget_lists.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "文件"))

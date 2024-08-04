@@ -6,6 +6,7 @@ v1.3更新：2024.08.04
 """
 
 import configparser
+import math
 import os
 import random
 import re
@@ -51,7 +52,6 @@ get_image_frame = 1
 video_list_data = []
 v_poster = "poster"
 v_thumb = "thumb"
-
 
 # [i,video_info]
 # video_info
@@ -208,6 +208,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         except Exception as e:
             #print("获取点击失败！")
             row = 0
+        self.tableWidget_piclayer.setRowCount(0)
         #print("row"+str(row))
         pic_num = piclayer_list_data[row][2]
         pic_oripath = os.path.dirname(piclayer_list_data[row][0])
@@ -215,15 +216,18 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         #print(pic_num)
         #print(pic_oripath)
         #print(pic_paths)
-        i_row = ceil(pic_num / 2)
+        i_row = math.floor(pic_num / 2)+1
         l_col = pic_num % 2
+        #print(l_col)
         #print("-----------------")
         #print(piclayer_list_data)
         for i in range(i_row):
+            #print(i)
             if i == i_row - 1:
                 i_col = l_col
             else:
                 i_col = 2
+            #print(i_col)
 
             for j in range(i_col):
                 #print(str(i) + "/" + str(j))

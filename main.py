@@ -2,6 +2,7 @@
 """
 制作人：duckeaty
 时间：2023.11.08
+v1.3更新：2024.08.04
 """
 
 import configparser
@@ -40,6 +41,7 @@ perVideo_frames = 1
 limit_time1 = 0.0
 limit_time2 = 100.0
 is_jpg = 1
+is_horizon = 1
 out_path_save = ""
 get_image_type = 3
 #1:提取封面
@@ -99,6 +101,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.toolButton.clicked.connect(self.openLog)
         self.radioButton_png.clicked.connect(self.d_set_png)
         self.radioButton_jpg.clicked.connect(self.d_set_jpg)
+        self.radioButton_o_h.clicked.connect(self.d_set_horizon)
+        self.radioButton_o_v.clicked.connect(self.d_set_vertical)
         self.button_piclayer_open.clicked.connect(self.d_open_piclayer)
         self.toolButton_piclayer.clicked.connect(self.d_close_piclayer)
 
@@ -119,6 +123,12 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         else:
             self.radioButton_png.setChecked(False)
             self.radioButton_jpg.setChecked(True)
+        if is_horizon == 0:
+            self.radioButton_o_v.setChecked(True)
+            self.radioButton_o_h.setChecked(False)
+        else:
+            self.radioButton_o_v.setChecked(False)
+            self.radioButton_o_h.setChecked(True)
         if out_path_save == "":
             self.line_outPath.setText("./outImage")
         else:
@@ -294,7 +304,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
 
     def dataFile_read(self):
-        global file_data_path, perVideo_frames, limit_time1, limit_time2, is_jpg, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data
+        global file_data_path, perVideo_frames, limit_time1, limit_time2, is_jpg, is_horizon, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data
         #数据读取
         if os.path.exists(file_data_path):
             with open(file_data_path, "r") as file:
@@ -304,17 +314,18 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
                 limit_time1 = file_data[1]
                 limit_time2 = file_data[2]
                 is_jpg = file_data[3]
-                out_path_save = file_data[4]
-                get_image_type = file_data[5]
-                get_image_frame = file_data[6]
-                v_poster = file_data[7]
-                v_thumb = file_data[8]
-                video_list_data = file_data[9]
+                is_horizon = file_data[4]
+                out_path_save = file_data[5]
+                get_image_type = file_data[6]
+                get_image_frame = file_data[7]
+                v_poster = file_data[8]
+                v_thumb = file_data[9]
+                video_list_data = file_data[10]
 
     def dataFile_write(self):
-        global file_data_path, perVideo_frames, limit_time1, limit_time2, is_jpg, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data
+        global file_data_path, perVideo_frames, limit_time1, limit_time2, is_jpg, is_horizon, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data
         #file_data = []
-        file_data = [perVideo_frames, limit_time1, limit_time2, is_jpg, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data]
+        file_data = [perVideo_frames, limit_time1, limit_time2, is_jpg, is_horizon, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data]
 
         #数据写入
         with open(file_data_path, "w") as file:
@@ -343,6 +354,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.radioButton_png.setEnabled(isEnable)
         self.radioButton_jpg.setEnabled(isEnable)
         self.label_format.setEnabled(isEnable)
+        self.groupBox_hv.setEnabled(isEnable)
         #self.button_addpath.setEnabled(isEnable)
 
 
@@ -647,6 +659,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         global video_list_data
         isStart = 1
         image_format = self.get_image_format()
+        image_hv = self.get_image_hv()
         # 开始提取图片
         #print(video_list_data)
         out_path = self.getOutPath()
@@ -670,7 +683,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
                 return False
             ori_path = video_list_data[i][0]
             out_path = video_list_data[i][5]
-            isImage_success = self.getImage(ori_path, out_path, 1, image_format)
+            isImage_success = self.getImage(ori_path, out_path, 1, image_format, image_hv)
             if isImage_success:
                 #print("提取成功！")
                 myLog.msgSignal.emit("[ " + out_path + "/1"+image_format+" ] 提取成功")
@@ -696,6 +709,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         global video_list_data
         isStart = 1
         image_format = self.get_image_format()
+        image_hv = self.get_image_hv()
         # 开始提取图片
         #print(video_list_data)
         out_path = self.getOutPath()
@@ -722,7 +736,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             ori_path = video_list_data[i][0]
             out_path = video_list_data[i][5]
             #print("ori_path:" + ori_path + "/out_path:" + out_path + "/frames:" + str(temp_nums))
-            isImage_success = self.getImage(ori_path, out_path, temp_nums, image_format)
+            isImage_success = self.getImage(ori_path, out_path, temp_nums, image_format, image_hv)
             if isImage_success:
                 #print("提取成功！")
                 myLog.msgSignal.emit("[ " + out_path + "/" + str(temp_nums) +image_format+" ] 提取成功")
@@ -774,6 +788,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         global video_list_data
         out_path = self.getOutPath()
         image_format = self.get_image_format()
+        image_hv = self.get_image_hv()
         num_success = 0
         num_failed = 0
         #if isStart == 0:
@@ -804,7 +819,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             if limit_frame2 >= video_list_data[i][4]:
                 limit_frame2 = limit_frame2 - 1
             frame_random_num = self.getRandom(limit_frame1, limit_frame2)
-            isImage_success = self.getImage(ori_path, out_path, frame_random_num, image_format)
+            isImage_success = self.getImage(ori_path, out_path, frame_random_num, image_format, image_hv)
             if isImage_success:
                 num_success = num_success + 1
                 #print("第 " + str(j + 1) + " 张提取成功！")
@@ -826,7 +841,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
                 video_list_data[i][6] = "完成\n" + str(num_success) + "/" + str(perVideo_frames)
             QtWidgets.QApplication.processEvents()
 
-    def getImage(self, ori_path, out_path, num_random, image_format):
+    def getImage(self, ori_path, out_path, num_random, image_format, image_hv):
         video = cv2.VideoCapture(ori_path)
         video.set(cv2.CAP_PROP_POS_FRAMES, num_random)
         save_path = out_path + "/" + str(num_random) + image_format
@@ -840,30 +855,52 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         v_height = p_size[0]
         t_width = 0
         t_height = 0
-        if v_width/v_height >= 16/9:
-            t_width = round(16/9*v_height)
-            t_height = v_height
+        if image_hv == "h":
+            if v_width / v_height >= 16 / 9:
+                t_width = round(16 / 9 * v_height)
+                t_height = v_height
+            else:
+                t_width = v_width
+                t_height = round(9 / 16 * v_width)
+            t_x = round((v_width - t_width) / 2)
+            t_y = round((v_height - t_height) / 2)
+            image_crop_h = image[t_y:(t_height + t_y), t_x:(t_width + t_x)]
         else:
-            t_width = v_width
-            t_height = round(9/16*v_width)
-        t_x = round((v_width-t_width)/2)
-        t_y = round((v_height-t_height)/2)
+            if v_width / v_height >= 9 / 16:
+                t_width = round(9 / 16 * v_height)
+                t_height = v_height
+            else:
+                t_width = v_width
+                t_height = round(16 / 9 * v_width)
+            t_x = round((v_width - t_width) / 2)
+            t_y = round((v_height - t_height) / 2)
+            image_crop_v = image[t_y:(t_height + t_y), t_x:(t_width + t_x)]
+            if v_width / v_height >= 16 / 9:
+                t_width = round(16 / 9 * v_height)
+                t_height = v_height
+            else:
+                t_width = v_width
+                t_height = round(9 / 16 * v_width)
+            t_x = round((v_width - t_width) / 2)
+            t_y = round((v_height - t_height) / 2)
+            image_crop_h = image[t_y:(t_height + t_y), t_x:(t_width + t_x)]
         #print(str(t_x)+","+str(t_y)+"/"+str(t_width+t_x)+","+str(t_height+t_y))
-        image_crop = image[t_y:(t_height+t_y), t_x:(t_width+t_x)]
-        #if image_format == ".jpg":
-        #    params = [cv2.IMWRITE_JPEG_QUALITY, 80] #0-100:越高质量越好
-        #elif image_format == ".png":
-        #    params = [cv2.IMWRITE_PNG_COMPRESSION, 7] #0-9：越高质量越好
-        #else:
-        #    params = [cv2.IMWRITE_JPEG_QUALITY, 80]
-        cv2.imencode(image_format, image_crop)[1].tofile(save_path)
-        #提取视频封面:
-        #ffmpeg -i video.mp4 -map 0:v -map -0:V -c copy cover.jpg
-        #del image
+        if image_hv == "h":
+            save_path_h = out_path + "/1_" + str(num_random) + "_h" + image_format
+            cv2.imencode(image_format, image_crop_h)[1].tofile(save_path_h)
+        else:
+            save_path_h = out_path + "/0_" + str(num_random) + "_h" + image_format
+            save_path_v = out_path + "/0_" + str(num_random) + "_v" + image_format
+            cv2.imencode(image_format, image_crop_h)[1].tofile(save_path_h)
+            cv2.imencode(image_format, image_crop_v)[1].tofile(save_path_v)
         video.release()
         is_success = False
-        if os.path.exists(save_path):
-            is_success = True
+        if image_hv == "h":
+            if os.path.exists(save_path_h):
+                is_success = True
+        else:
+            if os.path.exists(save_path_h) and os.path.exists(save_path_v):
+                is_success = True
         return is_success
 
     def d_set_jpg(self):
@@ -878,6 +915,18 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.dataFile_write()
         myLog.msgSignal.emit("图片保存格式更改为：PNG")
 
+    def d_set_horizon(self):
+        global is_horizon
+        is_horizon = 1
+        self.dataFile_write()
+        myLog.msgSignal.emit("封面图片保存版式更改为：横版")
+
+    def d_set_vertical(self):
+        global is_horizon
+        is_horizon = 0
+        self.dataFile_write()
+        myLog.msgSignal.emit("封面图片保存版式更改为：竖版")
+
     def get_image_format(self):
         global is_jpg
         if is_jpg == 0:
@@ -886,6 +935,15 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             return ".jpg"
         else:
             return ".png"
+
+    def get_image_hv(self):
+        global is_horizon
+        if is_horizon == 0:
+            return "v"
+        elif is_horizon == 1:
+            return "h"
+        else:
+            return "h"
     def mkdir(self, path):
         folder = os.path.exists(path)
         if not folder:  # 判断是否存在文件夹如果不存在则创建为文件夹
@@ -1085,7 +1143,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         for i in range(len(path_files)):
             file_name = path_files[i].split(".")
             file_type = file_name[len(file_name)-1]
-            if file_type == "mp4" or file_type == "mkv" or file_type == "mpg" or file_type == "mpeg" or file_type == "avi" or file_type == "rmvb" or file_type == "wmv" or file_type == "mov" or file_type == "flv" or file_type == "ts" or file_type == "webm" or file_type == "m4v" or file_type == "m2ts" or file_type == "asf":
+            if file_type == "mp4" or file_type == "mkv" or file_type == "mpg" or file_type == "mpeg" or file_type == "avi" or file_type == "rmvb" or file_type == "wmv" or file_type == "mov" or file_type == "flv" or file_type == "ts" or file_type == "webm" or file_type == "m4v" or file_type == "m2ts" or file_type == "asf" or file_type == "MP4" or file_type == "MKV" or file_type == "MPG" or file_type == "MPEG" or file_type == "AVI" or file_type == "RMVB" or file_type == "WMV" or file_type == "MOV" or file_type == "FLV" or file_type == "TS" or file_type == "WEBM" or file_type == "M4V" or file_type == "M2TS" or file_type == "ASF":
                 temp_files.append(QDir.fromNativeSeparators(path_files[i]))
         path_files = []
         out_path = self.getOutPath()

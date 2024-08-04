@@ -20,8 +20,11 @@
 
 8。支持抓取后选图自动在视频对应地址生成封面图和缩略图，并自动对图片进行裁剪适合EMBY用。
 
+20240804更新：
+支持抓取横版和竖版图片，抓取竖版时会同时抓取横版和竖版。
+
 其它功能自己摸索吧。
 
-![QQ图片20231112074923](https://github.com/duckeaty/ScratchMediaPictures/assets/106880276/02458164-da4d-4857-812b-b552e8b524df)
 
-![QQ图片20231112074929](https://github.com/duckeaty/ScratchMediaPictures/assets/106880276/71da7754-fe81-4bf7-8d8a-2acf0f5deebf)
+![image](https://github.com/user-attachments/assets/98850cf4-cb09-4969-88c9-a43053f00d8c)
+![image](https://github.com/user-attachments/assets/4418e5fb-3938-4402-91dc-62ca9f6124bf)

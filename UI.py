@@ -1,26 +1,163 @@
-
+import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowTitle("视频帧提取器")
         MainWindow.resize(788, 590)
+        sizePolicy_h = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy_h.setHorizontalStretch(1)
+        sizePolicy_v = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy_v.setVerticalStretch(1)
+        sizePolicy_hv = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy_hv.setHorizontalStretch(1)
+        sizePolicy_hv.setVerticalStretch(1)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(MainWindow.sizePolicy().hasHeightForWidth())
-        MainWindow.setSizePolicy(sizePolicy)
+        MainWindow.setSizePolicy(sizePolicy_hv)
         MainWindow.setMinimumSize(QtCore.QSize(788, 590))
-        MainWindow.setMaximumSize(QtCore.QSize(788, 590))
+        #MainWindow.setMaximumSize(QtCore.QSize(788, 590))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.groupBox = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox.setGeometry(QtCore.QRect(10, 10, 771, 431))
-        self.groupBox.setMinimumSize(QtCore.QSize(771, 431))
-        self.groupBox.setObjectName("groupBox")
-        self.tableWidget_lists = QtWidgets.QTableWidget(self.groupBox)
-        self.tableWidget_lists.setGeometry(QtCore.QRect(10, 40, 751, 381))
+
+
+#=======================layout===========================
+        self.main_layout = QtWidgets.QVBoxLayout(MainWindow)
+        self.main_layout.setContentsMargins(10, 10, 10, 10)
+
+
+        self.main_layout.setObjectName("main_layout")
+        #self.Layout_Widget.setSizePolicy(sizePolicy_hv)
+        self.centralwidget.setLayout(self.main_layout)
+        self.setCentralWidget(self.centralwidget)
+
+
+#=======================   上   ===============================
+    #--------------------------groupBox-----------------------
+        self.groupBox_1 = QtWidgets.QGroupBox(self.centralwidget)
+        #self.groupBox.setGeometry(QtCore.QRect(0, 0, 750, 40))
+        self.groupBox_1.setObjectName("groupBox_1")
+        self.groupBox_1.setTitle("视频列表")
+        self.groupBox_1lay = QtWidgets.QHBoxLayout(self.groupBox_1)
+        # self.groupBox.setGeometry(QtCore.QRect(0, 0, 750, 40))
+        self.groupBox_1lay.setObjectName("groupBox_1lay")
+        self.groupBox_1lay.setContentsMargins(0,0,0,0)
+
+
+        self.groupBox_b1 = QtWidgets.QGroupBox(self.groupBox_1)
+        #self.groupBox_b1.setGeometry(QtCore.QRect(10, 40, 751, 381))
+        self.groupBox_b1.setFixedSize(150,30)
+        self.groupBox_b1.setTitle("")
+        self.groupBox_b1.setObjectName("groupBox_b1")
+        self.groupBox_b1.setStyleSheet("""
+            QGroupBox {
+                border: none;  /* 去掉边框 */
+                background-color: transparent;
+            }
+        """)
+        self.groupBox_b11 = QtWidgets.QGroupBox(self.groupBox_b1)
+        # self.groupBox_b1.setGeometry(QtCore.QRect(10, 40, 751, 381))
+        self.groupBox_b11.setFixedSize(147, 30)
+        self.groupBox_b11.setTitle("")
+        self.groupBox_b11.setObjectName("groupBox_b1")
+        self.groupBox_b11.setStyleSheet("""
+                    QGroupBox {
+                        border: none;  /* 去掉边框 */
+                        background-color: transparent;
+                    }
+                """)
+        self.groupBox_b12 = QtWidgets.QGroupBox(self.groupBox_b1)
+        # self.groupBox_b1.setGeometry(QtCore.QRect(10, 40, 751, 381))
+        self.groupBox_b12.setFixedSize(170, 30)
+        self.groupBox_b12.setTitle("")
+        self.groupBox_b12.setObjectName("groupBox_b1")
+        self.groupBox_b12.setStyleSheet("""
+                    QGroupBox {
+                        border: none;  /* 去掉边框 */
+                        background-color: transparent;
+                    }
+                """)
+        self.button_addfile = QtWidgets.QToolButton(self.groupBox_b1)
+        self.button_addfile.setGeometry(QtCore.QRect(10, 6, 67, 18))
+        self.button_addfile.setObjectName("button_addfile")
+        self.button_piclayer_open = QtWidgets.QToolButton(self.groupBox_b1)
+        self.button_piclayer_open.setGeometry(QtCore.QRect(82, 6, 67, 18))
+        #self.button_piclayer_open.setFixedSize(67, 18)
+        self.button_piclayer_open.setObjectName("button_piclayer_open")
+
+        # self.button_addpath = QtWidgets.QToolButton(self.groupBox)
+        # self.button_addpath.setGeometry(QtCore.QRect(83, 16, 91, 18))
+        # self.button_addpath.setObjectName("button_addpath")
+        self.label_format = QtWidgets.QLabel(self.groupBox_b11)
+        self.label_format.setGeometry(QtCore.QRect(10, 9, 54, 12))
+        self.label_format.setObjectName("label_format")
+        self.radioButton_png = QtWidgets.QRadioButton(self.groupBox_b11)
+        self.radioButton_png.setGeometry(QtCore.QRect(67, 7, 41, 16))
+        self.radioButton_png.setObjectName("radioButton_png")
+        self.radioButton_jpg = QtWidgets.QRadioButton(self.groupBox_b11)
+        self.radioButton_jpg.setGeometry(QtCore.QRect(111, 7, 41, 16))
+        self.radioButton_jpg.setObjectName("radioButton_jpg")
+        self.radioButton_jpg.setChecked(True)
+
+        self.label_hv = QtWidgets.QLabel(self.groupBox_b12)
+        self.label_hv.setGeometry(QtCore.QRect(10, 7, 65, 16))
+        self.label_hv.setObjectName("label_hv")  # 封面图横竖
+        self.radioButton_o_h = QtWidgets.QRadioButton(self.groupBox_b12)
+        self.radioButton_o_h.setGeometry(QtCore.QRect(73, 7, 41, 16))
+        self.radioButton_o_h.setObjectName("radioButton_o_h")
+        self.radioButton_o_v = QtWidgets.QRadioButton(self.groupBox_b12)
+        self.radioButton_o_v.setGeometry(QtCore.QRect(110, 7, 41, 16))
+        self.radioButton_o_v.setObjectName("radioButton_o_v")
+        self.radioButton_o_h.setChecked(True)
+
+        self.groupBox_b2 = QtWidgets.QGroupBox(self.groupBox_1)
+        # self.groupBox_b1.setGeometry(QtCore.QRect(10, 40, 751, 381))
+        self.groupBox_b2.setFixedSize(168, 30)
+        self.groupBox_b2.setTitle("")
+        self.groupBox_b2.setObjectName("groupBox_b2")
+        self.groupBox_b2.setStyleSheet("""
+                    QGroupBox {
+                        border: none;  /* 去掉边框 */
+                        background-color: transparent;
+                    }
+                """)
+
+        self.button_delfiles = QtWidgets.QToolButton(self.groupBox_b2)
+        self.button_delfiles.setGeometry(QtCore.QRect(0, 6, 81, 18))
+        #self.button_delfiles.setFixedSize(67, 18)
+        self.button_delfiles.setObjectName("button_delfiles")
+        self.button_clear = QtWidgets.QToolButton(self.groupBox_b2)
+        self.button_clear.setGeometry(QtCore.QRect(91, 6, 67, 18))
+        #self.button_clear.setFixedSize(67, 18)
+        self.button_clear.setObjectName("button_clear")
+    #--------------------------------------------------------------
+        self.groupBox_1lay.addWidget(self.groupBox_b1)
+        self.groupBox_1lay.addWidget(self.groupBox_b11)
+        self.groupBox_1lay.addWidget(self.groupBox_b12)
+        self.groupBox_1lay.addStretch(1)
+        self.groupBox_1lay.addWidget(self.groupBox_b2)
+
+        self.main_layout.addWidget(self.groupBox_1)
+
+#===================================================================
+
+# =======================layout_2===========================
+        # --------------------------groupBox_list-----------------------
+        self.groupBox_list = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox_list.setObjectName("groupBox_list")
+        self.groupBox_list.setContentsMargins(0, 0, 0, 0)
+        self.groupBox_list.setGeometry(QtCore.QRect(0, 0, 768, 394))
+
+        self.table_lists = QtWidgets.QHBoxLayout(self.groupBox_list)
+
+        self.table_lists.setObjectName("table_lists")
+        self.table_lists.setContentsMargins(0, 0, 0, 0)
+
+        self.tableWidget_lists = QtWidgets.QTableWidget(self.groupBox_list)
+        #self.tableWidget_lists.setSizePolicy(sizePolicy_hv)
+        self.tableWidget_lists.setGeometry(QtCore.QRect(0, 0, 768, 394))
         self.tableWidget_lists.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.tableWidget_lists.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.tableWidget_lists.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
@@ -31,11 +168,12 @@ class Ui_MainWindow(object):
         self.tableWidget_lists.setObjectName("tableWidget_lists")
         self.tableWidget_lists.setColumnCount(5)
         self.tableWidget_lists.setRowCount(0)
-        self.tableWidget_lists.setColumnWidth(0, 245)
-        self.tableWidget_lists.setColumnWidth(1, 245)
-        self.tableWidget_lists.setColumnWidth(2, 55)
+        table_width = self.tableWidget_lists.width()
+        self.tableWidget_lists.setColumnWidth(0, int((table_width - 258) * 0.50))
+        self.tableWidget_lists.setColumnWidth(1, int((table_width - 258) * 0.50))
+        self.tableWidget_lists.setColumnWidth(2, 70)
         self.tableWidget_lists.setColumnWidth(3, 100)
-        self.tableWidget_lists.setColumnWidth(4, 50)
+        self.tableWidget_lists.setColumnWidth(4, 58)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_lists.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
@@ -46,89 +184,94 @@ class Ui_MainWindow(object):
         self.tableWidget_lists.setHorizontalHeaderItem(3, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_lists.setHorizontalHeaderItem(4, item)
-        self.button_piclayer_open = QtWidgets.QToolButton(self.groupBox)
-        self.button_piclayer_open.setGeometry(QtCore.QRect(82, 16, 67, 18))
-        self.button_piclayer_open.setObjectName("button_piclayer_open")
 
-        self.button_delfiles = QtWidgets.QToolButton(self.groupBox)
-        self.button_delfiles.setGeometry(QtCore.QRect(597, 16, 91, 18))
-        self.button_delfiles.setObjectName("button_delfiles")
-        self.button_clear = QtWidgets.QToolButton(self.groupBox)
-        self.button_clear.setGeometry(QtCore.QRect(694, 16, 67, 18))
-        self.button_clear.setObjectName("button_clear")
-        #self.button_addpath = QtWidgets.QToolButton(self.groupBox)
-        #self.button_addpath.setGeometry(QtCore.QRect(83, 16, 91, 18))
-        #self.button_addpath.setObjectName("button_addpath")
-        self.button_addfile = QtWidgets.QToolButton(self.groupBox)
-        self.button_addfile.setGeometry(QtCore.QRect(10, 16, 67, 18))
-        self.button_addfile.setObjectName("button_addfile")
-        self.label_format = QtWidgets.QLabel(self.groupBox)
-        self.label_format.setGeometry(QtCore.QRect(165, 19, 54, 12))
-        self.label_format.setObjectName("label_format")
-        self.radioButton_png = QtWidgets.QRadioButton(self.groupBox)
-        self.radioButton_png.setGeometry(QtCore.QRect(222, 17, 41, 16))
-        self.radioButton_png.setObjectName("radioButton_png")
-        self.radioButton_jpg = QtWidgets.QRadioButton(self.groupBox)
-        self.radioButton_jpg.setGeometry(QtCore.QRect(266, 17, 41, 16))
-        self.radioButton_jpg.setObjectName("radioButton_jpg")
-        self.radioButton_jpg.setChecked(True)
-        self.groupBox_hv = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_hv.setGeometry(QtCore.QRect(320, 22, 150, 24))
-        self.groupBox_hv.setMinimumSize(QtCore.QSize(150, 24))
-        self.groupBox_hv.setObjectName("groupBox_hv")
-        self.groupBox_hv.setStyleSheet("border: 0px outset;")
-        self.label_hv = QtWidgets.QLabel(self.groupBox_hv)
-        self.label_hv.setGeometry(QtCore.QRect(10, 5, 65, 16))
-        self.label_hv.setObjectName("label_hv")  # 封面图横竖
-        self.radioButton_o_h = QtWidgets.QRadioButton(self.groupBox_hv)
-        self.radioButton_o_h.setGeometry(QtCore.QRect(67, 5, 41, 16))
-        self.radioButton_o_h.setObjectName("radioButton_o_h")
-        self.radioButton_o_v = QtWidgets.QRadioButton(self.groupBox_hv)
-        self.radioButton_o_v.setGeometry(QtCore.QRect(104, 5, 41, 16))
-        self.radioButton_o_v.setObjectName("radioButton_o_v")
-        self.radioButton_o_h.setChecked(True)
+        self.table_lists.addWidget(self.tableWidget_lists)
+        self.main_layout.addWidget(self.groupBox_list)
+    # --------------------------------------------------------------
+# ===================================================================
         self.groupBox_2 = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_2.setGeometry(QtCore.QRect(10, 440, 771, 51))
-        self.groupBox_2.setTitle("")
         self.groupBox_2.setObjectName("groupBox_2")
-        self.radio_getposter = QtWidgets.QRadioButton(self.groupBox_2)
-        self.radio_getposter.setGeometry(QtCore.QRect(20, 19, 86, 16))
+        self.groupBox_2lay = QtWidgets.QHBoxLayout(self.groupBox_2)
+        self.groupBox_2lay.setObjectName("groupBox_2lay")
+        self.groupBox_2lay.setContentsMargins(0, 0, 0, 0)
+
+        self.groupBox_b3 = QtWidgets.QGroupBox(self.groupBox_2)
+        self.groupBox_b3.setFixedSize(120, 35)
+        self.groupBox_b3.setTitle("")
+        self.groupBox_b3.setObjectName("groupBox_b3")
+        self.groupBox_b3.setStyleSheet("""
+                            QGroupBox {
+                                border: none;  /* 去掉边框 */
+                                background-color: transparent;
+                            }
+                        """)
+
+
+
+        self.groupBox_b4 = QtWidgets.QGroupBox(self.groupBox_2)
+        # self.groupBox_b1.setGeometry(QtCore.QRect(10, 40, 751, 381))
+        self.groupBox_b4.setFixedSize(150, 35)
+        self.groupBox_b4.setTitle("")
+        self.groupBox_b4.setObjectName("groupBox_b4")
+        self.groupBox_b4.setStyleSheet("""
+                                    QGroupBox {
+                                        border: none;  /* 去掉边框 */
+                                        background-color: transparent;
+                                    }
+                                """)
+
+
+
+        self.groupBox_b5 = QtWidgets.QGroupBox(self.groupBox_2)
+        # self.groupBox_b1.setGeometry(QtCore.QRect(10, 40, 751, 381))
+        self.groupBox_b5.setFixedSize(455, 35)
+        self.groupBox_b5.setTitle("")
+        self.groupBox_b5.setObjectName("groupBox_b5")
+        self.groupBox_b5.setStyleSheet("""
+                                    QGroupBox {
+                                        border: none;  /* 去掉边框 */
+                                        background-color: transparent;
+                                    }
+                                """)
+
+        self.radio_getposter = QtWidgets.QRadioButton(self.groupBox_b3)
+        self.radio_getposter.setGeometry(QtCore.QRect(20, 9, 86, 16))
         self.radio_getposter.setObjectName("radio_getposter")
-        self.radio_getframe_num = QtWidgets.QRadioButton(self.groupBox_2)
-        self.radio_getframe_num.setGeometry(QtCore.QRect(142, 19, 86, 16))
+        self.radio_getframe_num = QtWidgets.QRadioButton(self.groupBox_b4)
+        self.radio_getframe_num.setGeometry(QtCore.QRect(20, 9, 86, 16))
         self.radio_getframe_num.setObjectName("radio_getframe_num")
-        self.radio_getframe_random = QtWidgets.QRadioButton(self.groupBox_2)
-        self.radio_getframe_random.setGeometry(QtCore.QRect(310, 19, 86, 16))
+        self.radio_getframe_random = QtWidgets.QRadioButton(self.groupBox_b5)
+        self.radio_getframe_random.setGeometry(QtCore.QRect(20, 9, 86, 16))
         self.radio_getframe_random.setChecked(True)
         self.radio_getframe_random.setObjectName("radio_getframe_random")
-        self.line_limitTime1 = QtWidgets.QLineEdit(self.groupBox_2)
-        self.line_limitTime1.setGeometry(QtCore.QRect(402, 19, 51, 16))
+        self.line_limitTime1 = QtWidgets.QLineEdit(self.groupBox_b5)
+        self.line_limitTime1.setGeometry(QtCore.QRect(115, 9, 51, 16))
         self.line_limitTime1.setMaxLength(6)
         self.line_limitTime1.setCursorPosition(0)
         self.line_limitTime1.setReadOnly(False)
         self.line_limitTime1.setObjectName("line_limitTime1")
-        self.line_limitTime2 = QtWidgets.QLineEdit(self.groupBox_2)
-        self.line_limitTime2.setGeometry(QtCore.QRect(487, 19, 51, 16))
+        self.line_limitTime2 = QtWidgets.QLineEdit(self.groupBox_b5)
+        self.line_limitTime2.setGeometry(QtCore.QRect(199, 9, 51, 16))
         self.line_limitTime2.setMaxLength(6)
         self.line_limitTime2.setReadOnly(False)
         self.line_limitTime2.setClearButtonEnabled(False)
         self.line_limitTime2.setObjectName("line_limitTime2")
-        self.line_frame_random_num = QtWidgets.QLineEdit(self.groupBox_2)
-        self.line_frame_random_num.setGeometry(QtCore.QRect(682, 19, 41, 16))
+        self.line_frame_random_num = QtWidgets.QLineEdit(self.groupBox_b5)
+        self.line_frame_random_num.setGeometry(QtCore.QRect(381, 9, 41, 16))
         self.line_frame_random_num.setMaxLength(5)
         self.line_frame_random_num.setCursorPosition(0)
         self.line_frame_random_num.setObjectName("line_frame_random_num")
-        self.line_frame_num = QtWidgets.QLineEdit(self.groupBox_2)
-        self.line_frame_num.setGeometry(QtCore.QRect(212, 19, 61, 16))
+        self.line_frame_num = QtWidgets.QLineEdit(self.groupBox_b4)
+        self.line_frame_num.setGeometry(QtCore.QRect(90, 9, 61, 16))
         self.line_frame_num.setObjectName("line_frame_num")
-        self.label_3 = QtWidgets.QLabel(self.groupBox_2)
-        self.label_3.setGeometry(QtCore.QRect(630, 16, 108, 21))
+        self.label_3 = QtWidgets.QLabel(self.groupBox_b5)
+        self.label_3.setGeometry(QtCore.QRect(330, 6, 108, 21))
         self.label_3.setObjectName("label_3")
-        self.label_isLimitTime = QtWidgets.QLabel(self.groupBox_2)
-        self.label_isLimitTime.setGeometry(QtCore.QRect(389, 19, 186, 16))
+        self.label_isLimitTime = QtWidgets.QLabel(self.groupBox_b5)
+        self.label_isLimitTime.setGeometry(QtCore.QRect(101, 9, 186, 16))
         self.label_isLimitTime.setObjectName("label_isLimitTime")
-        self.button_confirm = QtWidgets.QToolButton(self.groupBox_2)
-        self.button_confirm.setGeometry(QtCore.QRect(563, 19, 37, 16))
+        self.button_confirm = QtWidgets.QToolButton(self.groupBox_b5)
+        self.button_confirm.setGeometry(QtCore.QRect(273, 9, 37, 16))
         self.button_confirm.setObjectName("button_confirm")
         self.radio_getposter.raise_()
         self.radio_getframe_num.raise_()
@@ -139,39 +282,84 @@ class Ui_MainWindow(object):
         self.line_frame_num.raise_()
         self.label_3.raise_()
         self.line_frame_random_num.raise_()
-        self.groupBox_3 = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_3.setGeometry(QtCore.QRect(10, 500, 621, 51))
-        self.groupBox_3.setTitle("")
+
+        self.groupBox_2lay.addWidget(self.groupBox_b3)
+        self.groupBox_2lay.addStretch(1)
+        self.groupBox_2lay.addWidget(self.groupBox_b4)
+        self.groupBox_2lay.addStretch(1)
+        self.groupBox_2lay.addWidget(self.groupBox_b5)
+        self.main_layout.addWidget(self.groupBox_2)
+
+#=========================================================================================
+        self.groupBox_3 = QtWidgets.QHBoxLayout(self.centralwidget)
         self.groupBox_3.setObjectName("groupBox_3")
-        self.button_getOutPath = QtWidgets.QToolButton(self.groupBox_3)
+        self.groupBox_3.setContentsMargins(0, 0, 0, 0)
+
+        self.groupBox_b6 = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox_b6.setFixedSize(620, 51)
+        self.groupBox_b6.setTitle("")
+        self.groupBox_b6.setObjectName("groupBox_b6")
+
+        self.button_getOutPath = QtWidgets.QToolButton(self.groupBox_b6)
         self.button_getOutPath.setGeometry(QtCore.QRect(470, 10, 41, 31))
         self.button_getOutPath.setObjectName("button_getOutPath")
-        self.line_outPath = QtWidgets.QLineEdit(self.groupBox_3)
+        self.line_outPath = QtWidgets.QLineEdit(self.groupBox_b6)
         self.line_outPath.setGeometry(QtCore.QRect(104, 10, 361, 31))
         self.line_outPath.setReadOnly(True)
         self.line_outPath.setPlaceholderText("./outImage")
         self.line_outPath.setObjectName("line_outPath")
-        self.label = QtWidgets.QLabel(self.groupBox_3)
+        self.label = QtWidgets.QLabel(self.groupBox_b6)
         self.label.setGeometry(QtCore.QRect(21, 19, 81, 16))
         self.label.setObjectName("label")
-        self.button_openOutPath = QtWidgets.QToolButton(self.groupBox_3)
+        self.button_openOutPath = QtWidgets.QToolButton(self.groupBox_b6)
         self.button_openOutPath.setGeometry(QtCore.QRect(513, 10, 91, 31))
         self.button_openOutPath.setObjectName("button_openOutPath")
-        self.button_start = QtWidgets.QToolButton(self.centralwidget)
-        self.button_start.setGeometry(QtCore.QRect(670, 500, 111, 51))
+
+        self.groupBox_b7 = QtWidgets.QGroupBox(self.centralwidget)
+        self.groupBox_b7.setFixedSize(111, 51)
+        self.groupBox_b7.setTitle("")
+        self.groupBox_b7.setObjectName("groupBox_b7")
+        self.groupBox_b7.setStyleSheet("""
+            QGroupBox {
+                border: none;  /* 去掉边框 */
+                background-color: transparent;
+                }
+        """)
+
+        self.button_start = QtWidgets.QToolButton(self.groupBox_b7)
+        self.button_start.setGeometry(QtCore.QRect(0, 0, 111, 51))
         self.button_start.setStyleSheet("font: 87 14pt;")
         self.button_start.setObjectName("button_start")
-        self.button_stop = QtWidgets.QToolButton(self.centralwidget)
-        self.button_stop.setGeometry(QtCore.QRect(670, 500, 111, 51))
+        self.button_stop = QtWidgets.QToolButton(self.groupBox_b7)
+        self.button_stop.setGeometry(QtCore.QRect(0, 0, 111, 51))
         self.button_stop.setStyleSheet("font: 87 14pt;")
         self.button_stop.setObjectName("button_stop")
         self.button_stop.setHidden(True)
+
+        self.groupBox_3.addWidget(self.groupBox_b6)
+        self.groupBox_3.addStretch(1)
+        self.groupBox_3.addWidget(self.groupBox_b7)
+
+        self.main_layout.addLayout(self.groupBox_3)
+
+#=========================================================================
         self.groupBox_4 = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBox_4.setGeometry(QtCore.QRect(10, 560, 771, 21))
-        self.groupBox_4.setTitle("")
         self.groupBox_4.setObjectName("groupBox_4")
-        self.textBrowser = QtWidgets.QTextBrowser(self.centralwidget)
-        self.textBrowser.setGeometry(QtCore.QRect(40, 560, 741, 18))
+        self.groupBox_4.setContentsMargins(0, 0, 0, 0)
+        self.groupBox_4.setFixedHeight(19)
+
+        self.groupBox_4lay = QtWidgets.QHBoxLayout(self.groupBox_4)
+        self.groupBox_4lay.setObjectName("groupBox_2lay")
+        self.groupBox_4lay.setContentsMargins(0, 0, 0, 0)
+
+        self.toolButton = QtWidgets.QToolButton(self.groupBox_4)
+        self.toolButton.setGeometry(QtCore.QRect(0, 0, 31, 19))
+        self.toolButton.setObjectName("toolButton")
+        self.toolButton.setFixedHeight(19)
+        self.textBrowser = QtWidgets.QTextBrowser(self.groupBox_4)
+        self.textBrowser.setSizePolicy(sizePolicy_h)
+        self.textBrowser.setFixedHeight(18)
+        #self.textBrowser.setGeometry(QtCore.QRect(40, 0, 741, 18))
         self.textBrowser.setAutoFillBackground(False)
         self.textBrowser.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.textBrowser.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -179,17 +367,22 @@ class Ui_MainWindow(object):
         self.textBrowser.setStyleSheet("font: 8pt;background-color: rgba(255, 255, 255, 0); background-color: rgba(255, 255, 255, 0);")
         self.groupBox_4.raise_()
         self.textBrowser.raise_()
-        self.toolButton = QtWidgets.QToolButton(self.groupBox_4)
-        self.toolButton.setGeometry(QtCore.QRect(0, 0, 31, 19))
-        self.toolButton.setObjectName("toolButton")
         self.toolButton.raise_()
 
-        self.groupBox_5 = QtWidgets.QGroupBox(self.groupBox)
-        self.groupBox_5.setGeometry(QtCore.QRect(10, 40, 751, 381))
+        self.groupBox_4lay.addWidget(self.toolButton)
+        self.groupBox_4lay.addSpacing(-8)
+        self.groupBox_4lay.addWidget(self.textBrowser)
+
+        self.main_layout.addWidget(self.groupBox_4)
+
+
+#---------------------图片处理层--------------
+        self.groupBox_5 = QtWidgets.QGroupBox(self.groupBox_list)
+        self.groupBox_5.setGeometry(QtCore.QRect(0, 0, 768, 394))
         self.groupBox_5.setTitle("")
         self.groupBox_5.setObjectName("groupBox_5")
         self.tableWidget_piclayer = QtWidgets.QTableWidget(self.groupBox_5)
-        self.tableWidget_piclayer.setGeometry(QtCore.QRect(310, 0, 441, 381))
+        self.tableWidget_piclayer.setGeometry(QtCore.QRect(310, 0, 458, 394))
         self.tableWidget_piclayer.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.tableWidget_piclayer.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.tableWidget_piclayer.horizontalHeader().setVisible(False)
@@ -200,13 +393,13 @@ class Ui_MainWindow(object):
         self.tableWidget_piclayer.setObjectName("tableWidget_piclayer")
         self.tableWidget_piclayer.setColumnCount(2)
         self.tableWidget_piclayer.setRowCount(0)
-        self.tableWidget_piclayer.setColumnWidth(0, 210)
-        self.tableWidget_piclayer.setColumnWidth(1, 210)
+        self.tableWidget_piclayer.setColumnWidth(0, 220)
+        self.tableWidget_piclayer.setColumnWidth(1, 220)
         self.toolButton_piclayer = QtWidgets.QToolButton(self.groupBox_5)
-        self.toolButton_piclayer.setGeometry(QtCore.QRect(723, 0, 15, 15))
+        self.toolButton_piclayer.setGeometry(QtCore.QRect(748, 0, 20, 20))
         self.toolButton_piclayer.setObjectName("toolButton_piclayer")
         self.tableWidget_piclist = QtWidgets.QTableWidget(self.groupBox_5)
-        self.tableWidget_piclist.setGeometry(QtCore.QRect(0, 0, 311, 381))
+        self.tableWidget_piclist.setGeometry(QtCore.QRect(0, 0, 311, 394))
         self.tableWidget_piclist.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.tableWidget_piclist.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.tableWidget_piclist.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
@@ -221,9 +414,51 @@ class Ui_MainWindow(object):
         self.tableWidget_piclist.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget_piclist.setHorizontalHeaderItem(1, item)
+#-------------------------------------------------------------
+#---------------------------图片批量处理-------------------------------
+        self.groupBox_6 = QtWidgets.QGroupBox()
+        self.groupBox_6.setGeometry(QtCore.QRect(10, 40, 751, 381))
+        self.groupBox_6.setTitle("")
+        self.groupBox_6.setObjectName("groupBox_6")
+        self.tableWidget_piclayer2 = QtWidgets.QTableWidget(self.groupBox_6)
+        self.tableWidget_piclayer2.setGeometry(QtCore.QRect(310, 0, 441, 381))
+        self.tableWidget_piclayer2.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.tableWidget_piclayer2.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.tableWidget_piclayer2.horizontalHeader().setVisible(False)
+        self.tableWidget_piclayer2.verticalHeader().setVisible(False)
+        self.tableWidget_piclayer2.setAutoScroll(True)
+        self.tableWidget_piclayer2.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+        self.tableWidget_piclayer2.setLineWidth(0)
+        self.tableWidget_piclayer2.setObjectName("tableWidget_piclayer2")
+        self.tableWidget_piclayer2.setColumnCount(2)
+        self.tableWidget_piclayer2.setRowCount(0)
+        self.tableWidget_piclayer2.setColumnWidth(0, 210)
+        self.tableWidget_piclayer2.setColumnWidth(1, 210)
+        self.toolButton_piclayer2 = QtWidgets.QToolButton(self.groupBox_6)
+        self.toolButton_piclayer2.setGeometry(QtCore.QRect(718, 0, 15, 15))
+        self.toolButton_piclayer2.setObjectName("toolButton_piclayer2")
+        self.tableWidget_piclist2 = QtWidgets.QTableWidget(self.groupBox_6)
+        self.tableWidget_piclist2.setGeometry(QtCore.QRect(0, 0, 311, 381))
+        self.tableWidget_piclist2.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.tableWidget_piclist2.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.tableWidget_piclist2.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.tableWidget_piclist2.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.tableWidget_piclist2.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+        self.tableWidget_piclist2.setObjectName("tableWidget_piclist2")
+        self.tableWidget_piclist2.setColumnCount(2)
+        self.tableWidget_piclist2.setRowCount(0)
+        self.tableWidget_piclist2.setColumnWidth(0, 242)
+        self.tableWidget_piclist2.setColumnWidth(1, 40)
+        item2 = QtWidgets.QTableWidgetItem()
+        self.tableWidget_piclist2.setHorizontalHeaderItem(0, item2)
+        item2 = QtWidgets.QTableWidgetItem()
+        self.tableWidget_piclist2.setHorizontalHeaderItem(1, item2)
 
+#-------------------------------------------------------------------
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-        MainWindow.setCentralWidget(self.centralwidget)
+        MainWindow.setLayout(self.main_layout)
+        #MainWindow.setCentralWidget(self.centralwidget)
+
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -250,8 +485,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "视频帧提取器v1.3"))
-        self.groupBox.setTitle(_translate("MainWindow", "视频列表"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "视频帧提取器v1.4"))
+        #self.groupBox.setTitle(_translate("MainWindow", "视频列表"))
         item = self.tableWidget_lists.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "文件"))
         item = self.tableWidget_lists.horizontalHeaderItem(1)
@@ -299,6 +534,8 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "视频文件"))
         item = self.tableWidget_piclist.horizontalHeaderItem(1)
         item.setText(_translate("MainWindow", "图数"))
+
+        self.toolButton_piclayer2.setText(_translate("MainWindow", "X"))
 
 
 class Ui_Dialog(object):

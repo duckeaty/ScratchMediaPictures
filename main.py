@@ -3,6 +3,7 @@
 制作人：duckeaty
 时间：2023.11.08
 v1.3更新：2024.08.04
+v1.4更新：2025.02.21
 """
 
 import configparser
@@ -66,6 +67,7 @@ v_thumb = "thumb"
 # [8]=video_limitframe2
 # 列表数据
 
+pic_Item =  None
 # =====================================================================================================
 
 
@@ -78,16 +80,19 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         super(MainWindow, self).__init__()
         #self.ui = Ui_MainWindow()
         self.setupUi(self)
+        #self.setLayout(Layout1)
+        #self.show()
         self.setAcceptDrops(True)
         self.groupBox_5.setHidden(True)
+        self.groupBox_6.setHidden(True)
         self.button_delfiles.clicked.connect(lambda: self.thread_it(self.d_delfiles))
         self.button_clear.clicked.connect(lambda: self.thread_it(self.d_clear))
         #self.button_addfile.clicked.connect(lambda: self.thread_it(self.d_addfile))
         self.button_addfile.clicked.connect(self.d_addfile)
         #self.button_addpath.clicked.connect(lambda: self.thread_it(self.d_addpath))
-        self.radio_getposter.clicked.connect(self.table_refresh)
-        self.radio_getframe_num.clicked.connect(self.table_refresh)
-        self.radio_getframe_random.clicked.connect(self.table_refresh)
+        self.radio_getposter.clicked.connect(lambda: self.radio_frame_click(1))
+        self.radio_getframe_num.clicked.connect(lambda: self.radio_frame_click(2))
+        self.radio_getframe_random.clicked.connect(lambda: self.radio_frame_click(3))
         # self.line_limitTime1.clicked.connect(self.d_limitTime1)
         # self.line_limitTime2.clicked.connect(self.d_limitTime2)
         # self.line_frame_random_num.clicked.connect(self.d_frame_random_num)
@@ -175,6 +180,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def d_close_piclayer(self):
         global piclayer_list_data
         piclayer_list_data.clear()
+        self.tableWidget_piclayer.setRowCount(0)
+        self.tableWidget_piclayer.setColumnCount(0)
         self.groupBox_5.setHidden(True)
         self.setButton_enabled(1)
         self.button_start.setEnabled(1)
@@ -202,12 +209,27 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.tableWidget_piclist.itemClicked.connect(self.showPics)
 
     def showPics(self, Item):
-        global piclayer_list_data
+        global piclayer_list_data, pic_Item
+        pic_Item = Item
+        if pic_Item == None:
+            return
+        item_width_min = 210
+        item_width_max = 300
         try:
+            row_width = self.tableWidget_piclayer.width()-20
             row = Item.row()
         except Exception as e:
             #print("获取点击失败！")
             row = 0
+            row_width = 458
+        if row_width > 599:
+            item_num = int(row_width / item_width_max)
+        else:
+            item_num = int(row_width / item_width_min)
+        self.tableWidget_piclayer.setColumnCount(item_num)
+        item_width = int(row_width/item_num)
+        item_height = int(item_width*0.57)
+
         self.tableWidget_piclayer.setRowCount(0)
         #print("row"+str(row))
         pic_num = piclayer_list_data[row][2]
@@ -216,8 +238,9 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         #print(pic_num)
         #print(pic_oripath)
         #print(pic_paths)
-        i_row = math.floor(pic_num / 2)+1
-        l_col = pic_num % 2
+
+        i_row = math.floor(pic_num / item_num)+1
+        l_col = pic_num % item_num
         #print(l_col)
         #print("-----------------")
         #print(piclayer_list_data)
@@ -226,39 +249,42 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             if i == i_row - 1:
                 i_col = l_col
             else:
-                i_col = 2
+                i_col = item_num
             #print(i_col)
+
 
             for j in range(i_col):
                 #print(str(i) + "/" + str(j))
                 #print(pic_paths[i*2+j])
-                t = i*2+j
+                t = i*item_num+j
                 pixmap = QtGui.QPixmap(pic_paths[t])
-                pix = pixmap.scaled(210, 119, Qt.KeepAspectRatio)
+                pix = pixmap.scaled(item_width, item_height, Qt.KeepAspectRatio)
                 p_widget = QtWidgets.QWidget()
-                p_widget.setGeometry(QtCore.QRect(0, 0, 210, 119))
+                p_widget.setGeometry(QtCore.QRect(0, 0, item_width, item_height))
                 #widget.setObjectName("widget")
                 p_toolButton = QtWidgets.QToolButton(p_widget)
-                p_toolButton.setGeometry(QtCore.QRect(178, 100, 15, 15))
+                p_toolButton.setGeometry(QtCore.QRect(item_width-42, item_height-25, 20, 20))
                 p_toolButton.setText("封")
-                p_toolButton.setStyleSheet("font:7pt;")
+                p_toolButton.setStyleSheet("font:9pt;")
                 p_toolButton.clicked.connect(lambda :self.p_send_poster(row))
                 #toolButton.setObjectName("toolButton")
                 p_toolButton_2 = QtWidgets.QToolButton(p_widget)
-                p_toolButton_2.setGeometry(QtCore.QRect(194, 100, 15, 15))
+                p_toolButton_2.setGeometry(QtCore.QRect(item_width-21, item_height-25, 20, 20))
                 p_toolButton_2.setText("缩")
-                p_toolButton_2.setStyleSheet("font:7pt;")
+                p_toolButton_2.setStyleSheet("font:9pt;")
                 p_toolButton_2.clicked.connect(lambda :self.p_send_thumb(row))
                 #toolButton_2.setObjectName("toolButton_2")
                 p_label = QtWidgets.QLabel(p_widget)
-                p_label.setGeometry(QtCore.QRect(0, 0, 210, 119))
+                p_label.setGeometry(QtCore.QRect(0, 0, item_width, item_height))
                 p_label.setPixmap(pix)
                 #label.setObjectName("label")
                 p_label.raise_()
                 p_toolButton.raise_()
                 p_toolButton_2.raise_()
+
                 self.tableWidget_piclayer.setRowCount(i+1)
-                self.tableWidget_piclayer.setRowHeight(i,119)
+                self.tableWidget_piclayer.setColumnWidth(j, item_width)
+                self.tableWidget_piclayer.setRowHeight(i,item_height)
                 self.tableWidget_piclayer.setCellWidget(i,j,p_widget)
 
     def p_send_poster(self, v_index):
@@ -347,6 +373,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.line_limitTime1.setEnabled(isEnable)
         self.line_limitTime2.setEnabled(isEnable)
         self.line_frame_random_num.setEnabled(isEnable)
+        self.line_frame_num.setEnabled(isEnable)
         self.label_3.setEnabled(isEnable)
         self.label.setEnabled(isEnable)
         self.label_isLimitTime.setEnabled(isEnable)
@@ -357,8 +384,11 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.line_outPath.setEnabled(isEnable)
         self.radioButton_png.setEnabled(isEnable)
         self.radioButton_jpg.setEnabled(isEnable)
+        self.label_hv.setEnabled(isEnable)
+        self.radioButton_o_h.setEnabled(isEnable)
+        self.radioButton_o_v.setEnabled(isEnable)
         self.label_format.setEnabled(isEnable)
-        self.groupBox_hv.setEnabled(isEnable)
+        #self.groupBox_hv.setEnabled(isEnable)
         #self.button_addpath.setEnabled(isEnable)
 
 
@@ -367,6 +397,22 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.tableWidget_lists.setItem(row, 4, QtWidgets.QTableWidgetItem(status))
         self.tableWidget_lists.item(row, 4).setTextAlignment(-4)
 
+    def radio_frame_click(self,frame_type):
+        if frame_type == "":
+            frame_type = 1
+        if frame_type == 1:
+            self.radio_getposter.setChecked(True)
+            self.radio_getframe_num.setChecked(False)
+            self.radio_getframe_random.setChecked(False)
+        elif frame_type == 2:
+            self.radio_getposter.setChecked(False)
+            self.radio_getframe_num.setChecked(True)
+            self.radio_getframe_random.setChecked(False)
+        else:
+            self.radio_getposter.setChecked(False)
+            self.radio_getframe_num.setChecked(False)
+            self.radio_getframe_random.setChecked(True)
+        self.table_refresh(1)
 
     def table_refresh(self,isFresh):
         #列表刷新信号处理
@@ -1152,6 +1198,28 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         path_files = []
         out_path = self.getOutPath()
         self.setNewList(out_path,temp_files)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        global pic_Item
+        table_width = self.groupBox_list.width()
+        table_height = self.groupBox_list.height()
+        self.tableWidget_lists.setFixedSize(table_width, table_height)
+        self.tableWidget_lists.setColumnWidth(0, int((table_width - 258) * 0.50))
+        self.tableWidget_lists.setColumnWidth(1, int((table_width - 258) * 0.50))
+        self.tableWidget_lists.setColumnWidth(2, 70)
+        self.tableWidget_lists.setColumnWidth(3, 100)
+        self.tableWidget_lists.setColumnWidth(4, 58)
+
+        self.groupBox_5.setFixedSize(table_width, table_height)
+        self.tableWidget_piclist.setGeometry(QtCore.QRect(0, 0, 311, table_height))
+        #self.tableWidget_piclayer.setFixedSize(table_width, table_height)
+        self.tableWidget_piclayer.setGeometry(QtCore.QRect(310, 0, table_width-310, table_height))
+        self.tableWidget_piclayer.setColumnWidth(0, 210)
+        self.tableWidget_piclayer.setColumnWidth(1, int(table_width - 235))
+        self.toolButton_piclayer.setGeometry(QtCore.QRect(table_width - 20, 0, 20, 20))
+        if self.groupBox_5.isHidden() == 0:
+            self.showPics(pic_Item)
 
 
 class MainDiag(QtWidgets.QDialogButtonBox):

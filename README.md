@@ -38,10 +38,9 @@
 
 其它功能自己摸索吧。
 
-
-![image](https://github.com/user-attachments/assets/98850cf4-cb09-4969-88c9-a43053f00d8c)
-![image](https://github.com/user-attachments/assets/4418e5fb-3938-4402-91dc-62ca9f6124bf)
 ![a_1](https://github.com/user-attachments/assets/34ca92d2-d6ec-4b13-ac01-16830692dae0)
 ![a_2](https://github.com/user-attachments/assets/b01d51b2-231a-4a08-8ce2-be61c5cb3b17)
 ![a_3](https://github.com/user-attachments/assets/2fefa98e-452e-43fe-807e-22d085c1c196)
+![image](https://github.com/user-attachments/assets/98850cf4-cb09-4969-88c9-a43053f00d8c)
+![image](https://github.com/user-attachments/assets/4418e5fb-3938-4402-91dc-62ca9f6124bf)
 

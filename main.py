@@ -26,18 +26,25 @@ from PyQt5.QtCore import pyqtSignal, Qt, QDateTime, QDir
 from UI import Ui_MainWindow, Ui_Dialog, Ui_Dialog_Log
 from collections import OrderedDict
 import threading
+import copy
 
 # =====================================================================================================
 isStart = 0
 isThreadAlive = 0
+is_picset_layer_fresh = 0
 is_log = 0
+stop_flag = 0
+v_index = 0
 path_files =[]
+pic_cache = {}
 file_data_path = "data.json"
 piclayer_list_data = []
 #[0]=video_oripath
 #[1]=video_outpath
 #[2]=pic_num
 #[3]=pic_paths
+piclayer_list_data2 = []
+picset_list_data = []
 
 perVideo_frames = 1
 limit_time1 = 0.0
@@ -70,6 +77,25 @@ v_thumb = "thumb"
 pic_Item =  None
 # =====================================================================================================
 
+class TaskThread(threading.Thread):
+    def __init__(self, target=None):
+        super().__init__()
+        self.target = target
+        self.running = False
+
+    def run(self):
+        global stop_flag
+        self.running = True
+
+        while not stop_flag:
+            if self.target is not None:
+                self.target()
+
+            # 避免高频循环，设置一个适当的休眠时间
+            time.sleep(0.1)
+
+        #print("任务已终止。")
+
 
 class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     statusSignal = pyqtSignal(int,str)
@@ -85,6 +111,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.setAcceptDrops(True)
         self.groupBox_5.setHidden(True)
         self.groupBox_6.setHidden(True)
+        self.groupBox_7.setHidden(True)
         self.button_delfiles.clicked.connect(lambda: self.thread_it(self.d_delfiles))
         self.button_clear.clicked.connect(lambda: self.thread_it(self.d_clear))
         #self.button_addfile.clicked.connect(lambda: self.thread_it(self.d_addfile))
@@ -110,9 +137,13 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.radioButton_o_v.clicked.connect(self.d_set_vertical)
         self.button_piclayer_open.clicked.connect(self.d_open_piclayer)
         self.toolButton_piclayer.clicked.connect(self.d_close_piclayer)
-
-
-
+        self.button_1button.clicked.connect(self.d_open_1button)
+        self.toolButton_piclayer2.clicked.connect(self.d_close_1button)
+        self.button_poster_1h.clicked.connect(lambda: self.thread_it(self.d_set_allpics("ph")))
+        self.button_poster_1v.clicked.connect(lambda: self.thread_it(self.d_set_allpics("pv")))
+        self.button_thumb_1h.clicked.connect(lambda: self.thread_it(self.d_set_allpics("th")))
+        self.button_thumb_1v.clicked.connect(lambda: self.thread_it(self.d_set_allpics("tv")))
+        self.toolButton_piclayer3.clicked.connect(self.d_close_changepic)
 
         self.setButton_enabled(0)
         self.button_openOutPath.setEnabled(0)
@@ -156,8 +187,340 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.button_openOutPath.setEnabled(1)
         self.button_start.setEnabled(1)
 
+    def d_open_changepic(self, v_index:int):
+        self.button_poster_1h.setEnabled(0)
+        self.button_poster_1v.setEnabled(0)
+        self.button_thumb_1h.setEnabled(0)
+        self.button_thumb_1v.setEnabled(0)
+        self.toolButton_piclayer2.setEnabled(0)
+        self.groupBox_7.setHidden(False)
+        self.show_changepics(v_index)
+    def d_close_changepic(self):
+        global is_picset_layer_fresh
+        self.button_poster_1h.setEnabled(1)
+        self.button_poster_1v.setEnabled(1)
+        self.button_thumb_1h.setEnabled(1)
+        self.button_thumb_1v.setEnabled(1)
+        self.toolButton_piclayer2.setEnabled(1)
+        self.tableWidget_piclayer3.setRowCount(0)
+        self.tableWidget_piclayer3.setColumnCount(0)
+        self.groupBox_7.setHidden(True)
+        if is_picset_layer_fresh == 1:
+            self.d_set_allpics_refresh()
+            is_picset_layer_fresh = 0
+
+    def d_open_1button(self):
+        self.setButton_enabled(0)
+        self.button_start.setEnabled(0)
+        self.groupBox_6.setHidden(False)
 
 
+    def d_close_1button(self):
+        self.setButton_enabled(1)
+        self.tableWidget_piclayer2.setRowCount(0)
+        self.tableWidget_piclayer2.setColumnCount(0)
+        self.button_start.setEnabled(1)
+        self.groupBox_6.setHidden(True)
+
+    def d_set_allpics(self, pic_Type):
+        global video_list_data, piclayer_list_data, piclayer_list_data2, pic_cache, picset_list_data
+        piclayer_list_data.clear()
+        picset_list_data.clear()
+        if pic_Type == None:
+            pic_type = "th"
+        elif pic_Type == "ph":
+            pic_type = "ph"
+        elif pic_Type =="pv":
+            pic_type = "pv"
+        elif pic_Type == "tv":
+            pic_type = "tv"
+        else:
+            pic_type = "th"
+
+        # 图片处理层列表生成
+        for i in range(len(video_list_data)):
+            temp_file = self.getPicNum(video_list_data[i][5])
+            temp_data = [video_list_data[i][0], video_list_data[i][5], temp_file[0], temp_file[1]]
+            #[file_ori_path, file_to_path, pic_num, file_topath+name_array]
+            piclayer_list_data.append(temp_data)
+        piclayer_list_data.sort()
+        piclayer_list_data2 = piclayer_list_data
+
+        # 开始生成列表
+        self.tableWidget_piclayer2.setRowCount(0)
+        self.tableWidget_piclayer2.setStyleSheet("font: 7pt;")
+        # print(video_list_data)
+        text_height = 24
+        item_width_min = 200
+        item_width_max = 300
+        pic_rate = 0.56
+        if pic_type == "pv" or pic_type == "tv":
+            item_width_min = 120
+            item_width_max = 180
+            pic_rate = 1.75
+        try:
+            row_width = self.tableWidget_piclayer2.width() - 20
+        except Exception as e:
+            row_width = 748
+        if row_width > (item_width_max * 2 - 1):
+            item_num = int(row_width / item_width_max) +1
+        else:
+            item_num = int(row_width / item_width_min)
+        self.tableWidget_piclayer2.setColumnCount(item_num)
+        item_width = int(row_width / item_num)
+        item_height = int(item_width * pic_rate)
+
+        self.tableWidget_piclayer2.setRowCount(0)
+
+        i_row = math.floor(len(piclayer_list_data) / item_num) + 1
+        l_col = len(piclayer_list_data) % item_num
+        for i in range(i_row):
+            if i == i_row - 1:
+                i_col = l_col
+            else:
+                i_col = item_num
+
+            for j in range(i_col):
+                t = i * item_num + j
+                p_index = self.p_send_pic(t, pic_type)
+
+                p_widget2 = QtWidgets.QWidget()
+                p_widget2.setGeometry(QtCore.QRect(0, 0, item_width, item_height + text_height))
+                p_widget2.setObjectName("p_widget2")
+                p_widget2.setContentsMargins(0, 0, 0, 0)
+                p_widget2.setStyleSheet("background-color: black; border: 1px solid white;")
+
+                p_label2 = QtWidgets.QLabel(p_widget2)
+                p_label2.setGeometry(QtCore.QRect(0, 0, item_width, item_height))
+                if p_index < 9999999 and p_index > -1:
+                    pixmap = self.getPiccache(piclayer_list_data[t][3][p_index])
+                    pix = pixmap.scaled(item_width, item_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    del pixmap
+                    p_label2.setPixmap(pix)
+                    p_label2.setStyleSheet("border: none;")
+                elif p_index == -1:
+                    p_label2.setStyleSheet("background-color: gray; border: none;")
+                    p_label2.setText("还未抓取图片")
+                    p_label2.setAlignment(QtCore.Qt.AlignCenter)
+                else:
+                    p_label2.setStyleSheet("background-color: gray; border: none;")
+                    p_label2.setText("无符合图片")
+                    p_label2.setAlignment(QtCore.Qt.AlignCenter)
+                p_label3 = QtWidgets.QLabel(p_widget2)
+                p_label3.setGeometry(QtCore.QRect(0, item_height, item_width, text_height))
+                p_label3_text = piclayer_list_data[t][0]
+                last_slash_index = p_label3_text.rfind('/')
+                if last_slash_index != -1:
+                    p_label3_text = p_label3_text[last_slash_index + 1:]
+                p_label3.setText(p_label3_text)
+                p_label3.setAlignment(QtCore.Qt.AlignCenter)
+                p_label3.setStyleSheet("border: none; color: white;")
+
+                p_toolButton2 = QtWidgets.QToolButton(p_widget2)
+                p_toolButton2.setGeometry(QtCore.QRect(item_width - 23, item_height + 1, 20, 20))
+                p_toolButton2.setText("改")
+                p_toolButton2.setStyleSheet("font:9pt;background-color: white; color: black")
+                p_toolButton2.clicked.connect(lambda state, t_val=t: self.d_open_changepic(t_val))
+                p_toolButton2.setObjectName("p_toolButton2")
+
+                if p_index < 9999999 and p_index > -1:
+                    temp_picset_list_data = [t, p_index, pic_type, piclayer_list_data[t][0], piclayer_list_data[t][3][p_index]]
+                else:
+                    temp_picset_list_data = [t, p_index, pic_type, piclayer_list_data[t][0], "null"]
+                #[index, p_index, pic_type, ori_path, 抓图集[p_index]]
+                picset_list_data.append(temp_picset_list_data)
+
+                self.tableWidget_piclayer2.setRowCount(i + 1)
+                self.tableWidget_piclayer2.setColumnWidth(j, item_width)
+                self.tableWidget_piclayer2.setRowHeight(i, item_height + text_height)
+                self.tableWidget_piclayer2.setCellWidget(i, j, p_widget2)
+
+
+
+    def d_set_allpics_refresh(self):
+        global video_list_data, piclayer_list_data2, pic_cache, picset_list_data
+        pic_type = picset_list_data[0][2]
+
+        # 开始生成列表
+        self.tableWidget_piclayer2.setRowCount(0)
+        self.tableWidget_piclayer2.setStyleSheet("font: 7pt;")
+        # print(video_list_data)
+        text_height = 24
+        item_width_min = 200
+        item_width_max = 300
+        pic_rate = 0.56
+        if pic_type == "pv" or pic_type == "tv":
+            item_width_min = 120
+            item_width_max = 180
+            pic_rate = 1.75
+        try:
+            row_width = self.tableWidget_piclayer2.width() - 20
+        except Exception as e:
+            row_width = 748
+        if row_width > (item_width_max * 2 - 1):
+            item_num = int(row_width / item_width_max) + 1
+        else:
+            item_num = int(row_width / item_width_min)
+        self.tableWidget_piclayer2.setColumnCount(item_num)
+        item_width = int(row_width / item_num)
+        item_height = int(item_width * pic_rate)
+
+        self.tableWidget_piclayer2.setRowCount(0)
+
+        i_row = math.floor(len(piclayer_list_data2) / item_num) + 1
+        l_col = len(piclayer_list_data2) % item_num
+        for i in range(i_row):
+            if i == i_row - 1:
+                i_col = l_col
+            else:
+                i_col = item_num
+
+            for j in range(i_col):
+                t = i * item_num + j
+                p_index = picset_list_data[t][1]
+
+                p_widget2 = QtWidgets.QWidget()
+                p_widget2.setGeometry(QtCore.QRect(0, 0, item_width, item_height + text_height))
+                p_widget2.setObjectName("p_widget2")
+                p_widget2.setContentsMargins(0, 0, 0, 0)
+                p_widget2.setStyleSheet("background-color: black; border: 1px solid white;")
+
+                p_label2 = QtWidgets.QLabel(p_widget2)
+                p_label2.setGeometry(QtCore.QRect(0, 0, item_width, item_height))
+                if p_index < 9999999 and p_index > -1:
+                    pixmap = self.getPiccache(piclayer_list_data2[t][3][p_index])
+                    pix = pixmap.scaled(item_width, item_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    del pixmap
+                    p_label2.setPixmap(pix)
+                    p_label2.setStyleSheet("border: none;")
+                elif p_index == -1:
+                    p_label2.setStyleSheet("background-color: gray; border: none;")
+                    p_label2.setText("还未抓取图片")
+                    p_label2.setAlignment(QtCore.Qt.AlignCenter)
+                else:
+                    p_label2.setStyleSheet("background-color: gray; border: none;")
+                    p_label2.setText("无符合图片")
+                    p_label2.setAlignment(QtCore.Qt.AlignCenter)
+                p_label3 = QtWidgets.QLabel(p_widget2)
+                p_label3.setGeometry(QtCore.QRect(0, item_height, item_width, text_height))
+                p_label3_text = piclayer_list_data2[t][0]
+                last_slash_index = p_label3_text.rfind('/')
+                if last_slash_index != -1:
+                    p_label3_text = p_label3_text[last_slash_index + 1:]
+                p_label3.setText(p_label3_text)
+                p_label3.setAlignment(QtCore.Qt.AlignCenter)
+                p_label3.setStyleSheet("border: none; color: white;")
+
+                p_toolButton2 = QtWidgets.QToolButton(p_widget2)
+                p_toolButton2.setGeometry(QtCore.QRect(item_width - 23, item_height + 1, 20, 20))
+                p_toolButton2.setText("改")
+                p_toolButton2.setStyleSheet("font:9pt;background-color: white; color: black")
+                p_toolButton2.clicked.connect(lambda state, t_val=t: self.d_open_changepic(t_val))
+                p_toolButton2.setObjectName("p_toolButton2")
+                self.tableWidget_piclayer2.setRowCount(i + 1)
+                self.tableWidget_piclayer2.setColumnWidth(j, item_width)
+                self.tableWidget_piclayer2.setRowHeight(i, item_height + text_height)
+                self.tableWidget_piclayer2.setCellWidget(i, j, p_widget2)
+
+
+
+
+    def p_send_pic(self, v_index, pic_Type):
+        global piclayer_list_data
+        if (piclayer_list_data[v_index][2]) > 0:
+            p_index = self.getRandom(0, (piclayer_list_data[v_index][2]-1))
+        else:
+            return(-1)
+        if pic_Type == "ph" or pic_Type == "th":
+            pattern1 = r'_h.jpg'
+            pattern2 = r'_h.png'
+        else:
+            pattern1 = r'_v.jpg'
+            pattern2 = r'_v.png'
+        file_old = piclayer_list_data[v_index][3][p_index]
+        is_pic_null = 1
+        if re.search(pattern1, file_old) or re.search(pattern2, file_old):
+            is_pic_null = 0
+        else:
+            max_p_index = len(piclayer_list_data[v_index][3])
+            #temp_index = p_index
+            for i in range(max_p_index):
+                if (i + p_index) >= (max_p_index - 1):
+                    temp_index = i + p_index - max_p_index
+                    file_old = piclayer_list_data[v_index][3][temp_index]
+                    if re.search(pattern1, file_old) or re.search(pattern2, file_old):
+                        is_pic_null = 0
+                        p_index = temp_index
+                        break
+                else:
+                    temp_index = i + p_index
+                    file_old = piclayer_list_data[v_index][3][temp_index]
+                    if re.search(pattern1, file_old) or re.search(pattern2, file_old):
+                        is_pic_null = 0
+                        p_index = temp_index
+                        break
+        if pic_Type == "ph" or pic_Type == "pv":
+            pic_type = "封面"
+        else:
+            pic_type = "缩略图"
+        if is_pic_null == 0:
+            file_ext = os.path.splitext(file_old)[-1]
+            file_name, ext = os.path.splitext(piclayer_list_data[v_index][0])
+            if pic_Type == "ph" or pic_Type =="pv":
+                file_name_new = file_name+"-poster"+file_ext
+            else:
+                file_name_new = file_name+"-thumb"+file_ext
+            shutil.copyfile(file_old,file_name_new)
+            myLog.msgSignal.emit("成功导出" + pic_type + "文件: [ " + file_name_new + " ]")
+            return(p_index)
+        else:
+            myLog.msgSignal.emit("[失败]：" + piclayer_list_data[v_index][0] + "没有符合的" + pic_type + "文件，导出失败")
+            return(9999999)
+
+
+    def p_send_pic2(self, v_index, p_index, pic_Type):
+        global piclayer_list_data, picset_list_data, is_picset_layer_fresh
+        file_old = piclayer_list_data[v_index][3][p_index]
+
+        if pic_Type == "ph" or pic_Type == "pv":
+            type_text = "封面"
+        else:
+            type_text = "缩略图"
+
+        file_ext = os.path.splitext(file_old)[-1]
+        file_name, ext = os.path.splitext(piclayer_list_data[v_index][0])
+        if pic_Type == "ph" or pic_Type == "pv":
+            file_name_new = file_name + "-poster" + file_ext
+        else:
+            file_name_new = file_name + "-thumb" + file_ext
+        try:
+            shutil.copyfile(file_old, file_name_new)
+            picset_list_data[v_index] = [v_index, p_index, pic_Type, piclayer_list_data[v_index][0], piclayer_list_data[v_index][3][p_index]]
+            myLog.msgSignal.emit("成功导出" + type_text + "文件: [ " + file_name_new + " ]")
+            is_picset_layer_fresh = 1
+            return(1)
+        except KeyError:
+            myLog.msgSignal.emit("[失败]：" + type_text + "文件: [ " + file_name_new + " ] 导出失败")
+            return(0)
+
+    def thread_showPics(self, Item):
+        global stop_flag
+        threads = threading.enumerate()
+        for t in threads:
+            if isinstance(t, TaskThread) and t.running:
+               #print("检测到已有任务在运行，即将中止...")
+               stop_flag = True
+               # 等待线程终止
+               while t.is_alive():
+                   pass
+               # 重置标志位
+               stop_flag = False
+
+        # 启动新的任务线程
+        task_thread = TaskThread(target = self.showPics(Item))
+        task_thread.daemon = True
+        task_thread.start()
+        #print("新任务已启动。")
 
 
     def thread_it(self, func, *args):
@@ -206,24 +569,136 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self.tableWidget_piclist.item(i, 1).setTextAlignment(-4)
 
             QtWidgets.QApplication.processEvents()
-        self.tableWidget_piclist.itemClicked.connect(self.showPics)
+        self.tableWidget_piclist.itemClicked.connect(self.thread_showPics)
+
+
+    def getPiccache(self, pic_path):
+        global pic_cache
+        try:
+            a = pic_cache[pic_path]
+            del a
+        except KeyError:
+            a = QtGui.QPixmap(pic_path)
+            pic_cache[pic_path] = a.scaled(int(300 * (a.width() / a.height())), 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            del a
+            return pic_cache[pic_path]
+        return pic_cache[pic_path]
+
+    def show_changepics(self, d_index:int):
+        global piclayer_list_data, pic_cache, picset_list_data, v_index
+        v_index = d_index
+        pic_type = picset_list_data[v_index][2]
+        if pic_type == "ph" or pic_type == "pv":
+            type_text = "封"
+        else:
+            type_text = "缩"
+        self.tableWidget_piclayer3.setRowCount(0)
+        self.tableWidget_piclayer3.setStyleSheet("font: 7pt;")
+        item_width_min = 200
+        item_width_max = 300
+        pic_rate = 0.56
+        if pic_type == "pv" or pic_type == "tv":
+            item_width_min = 120
+            item_width_max = 180
+            pic_rate = 1.79
+
+        try:
+            row_width = self.groupBox_list.width() - 20
+        except Exception as e:
+            row_width = 748
+        if row_width > (item_width_max * 2 - 1):
+            item_num = int(row_width / item_width_max) + 1
+        else:
+            item_num = int(row_width / item_width_min)
+        self.tableWidget_piclayer3.setColumnCount(item_num)
+        item_width = int(row_width / item_num)
+        item_height = int(item_width * pic_rate)
+
+        title_text = piclayer_list_data2[v_index][0]
+        last_slash_index = title_text.rfind('/')
+        if last_slash_index != -1:
+            title_text = title_text[last_slash_index + 1:]
+        self.groupBox_7b_lable.setText(title_text)
+        self.groupBox_7b_lable.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.tableWidget_piclayer3.setRowCount(0)
+        #pic_paths = piclayer_list_data[v_index][3]
+
+        i_row = math.floor(len(piclayer_list_data[v_index][3]) / item_num) + 1
+        l_col = len(piclayer_list_data[v_index][3]) % item_num
+
+        p_i = 0
+        p_j = 0
+        for i in range(i_row):
+            if i == i_row - 1:
+                i_col = l_col
+            else:
+                i_col = item_num
+
+            for j in range(i_col):
+                t = i * item_num + j
+                temp_path = piclayer_list_data[v_index][3][t]
+                if pic_type == "ph" or pic_type == "th":
+                    pattern1 = r'_h.jpg'
+                    pattern2 = r'_h.png'
+                else:
+                    pattern1 = r'_v.jpg'
+                    pattern2 = r'_v.png'
+
+
+                if re.search(pattern1, temp_path) or re.search(pattern2, temp_path):
+                    pixmap = self.getPiccache(temp_path)
+                    # pixmap = QtGui.QPixmap(pic_paths[t])
+                    pix = pixmap.scaled(item_width, item_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    del pixmap
+                    p_widget3 = QtWidgets.QWidget()
+                    p_widget3.setGeometry(QtCore.QRect(0, 0, item_width, item_height))
+                    p_widget3.setObjectName("p_widget3")
+                    p_toolButton3 = QtWidgets.QToolButton(p_widget3)
+                    p_toolButton3.setGeometry(QtCore.QRect(item_width - 24, item_height - 22, 20, 20))
+                    p_toolButton3.setText(type_text)
+                    p_toolButton3.setStyleSheet("font:9pt;")
+                    p_toolButton3.setObjectName("p_toolButton3")
+                    if type_text == "封":
+                        p_toolButton3.clicked.connect(lambda state, val_j = t: self.p_send_pic2(d_index, val_j, pic_type))
+                    else:
+                        p_toolButton3.clicked.connect(lambda state, val_j = t: self.p_send_pic2(d_index, val_j, pic_type))
+
+
+                    p_label5 = QtWidgets.QLabel(p_widget3)
+                    p_label5.setGeometry(QtCore.QRect(0, 0, item_width, item_height))
+                    p_label5.setPixmap(pix)
+                    p_label5.setObjectName("p_label5")
+                    p_label5.raise_()
+                    p_toolButton3.raise_()
+
+                    self.tableWidget_piclayer3.setRowCount(p_i + 1)
+                    self.tableWidget_piclayer3.setColumnWidth(p_j, item_width)
+                    self.tableWidget_piclayer3.setRowHeight(p_i, item_height)
+                    self.tableWidget_piclayer3.setCellWidget(p_i, p_j, p_widget3)
+
+                    p_j = p_j + 1
+                    if p_j == i_col:
+                        p_i = p_i + 1
+                        p_j = 0
+
+
 
     def showPics(self, Item):
-        global piclayer_list_data, pic_Item
+        global piclayer_list_data, pic_Item, pic_cache
         pic_Item = Item
         if pic_Item == None:
             return
         item_width_min = 210
         item_width_max = 300
         try:
-            row_width = self.tableWidget_piclayer.width()-20
+            row_width = self.groupBox_list.width()-330
             row = Item.row()
         except Exception as e:
-            #print("获取点击失败！")
             row = 0
             row_width = 458
         if row_width > 599:
-            item_num = int(row_width / item_width_max)
+            item_num = int(row_width / item_width_max) + 1
         else:
             item_num = int(row_width / item_width_min)
         self.tableWidget_piclayer.setColumnCount(item_num)
@@ -231,53 +706,51 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         item_height = int(item_width*0.57)
 
         self.tableWidget_piclayer.setRowCount(0)
-        #print("row"+str(row))
         pic_num = piclayer_list_data[row][2]
         pic_oripath = os.path.dirname(piclayer_list_data[row][0])
         pic_paths = piclayer_list_data[row][3]
-        #print(pic_num)
-        #print(pic_oripath)
-        #print(pic_paths)
 
         i_row = math.floor(pic_num / item_num)+1
         l_col = pic_num % item_num
-        #print(l_col)
-        #print("-----------------")
-        #print(piclayer_list_data)
         for i in range(i_row):
-            #print(i)
             if i == i_row - 1:
                 i_col = l_col
             else:
                 i_col = item_num
-            #print(i_col)
-
 
             for j in range(i_col):
                 #print(str(i) + "/" + str(j))
                 #print(pic_paths[i*2+j])
                 t = i*item_num+j
-                pixmap = QtGui.QPixmap(pic_paths[t])
-                pix = pixmap.scaled(item_width, item_height, Qt.KeepAspectRatio)
+                pixmap = self.getPiccache(pic_paths[t])
+                #pixmap = QtGui.QPixmap(pic_paths[t])
+                pix_width = int(item_height * (pixmap.width() / pixmap.height()))
+                pix_pos_x = int((item_width - pix_width) / 2)
+                pix = pixmap.scaled(pix_width, item_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                del pixmap
+                pix.name = "pix"
                 p_widget = QtWidgets.QWidget()
                 p_widget.setGeometry(QtCore.QRect(0, 0, item_width, item_height))
-                #widget.setObjectName("widget")
+                p_widget.setObjectName("p_widget")
+                p_widget.setStyleSheet("background-color: #999999;")
                 p_toolButton = QtWidgets.QToolButton(p_widget)
-                p_toolButton.setGeometry(QtCore.QRect(item_width-42, item_height-25, 20, 20))
+                p_toolButton.setGeometry(QtCore.QRect(item_width-43, item_height-22, 20, 20))
                 p_toolButton.setText("封")
                 p_toolButton.setStyleSheet("font:9pt;")
                 p_toolButton.clicked.connect(lambda :self.p_send_poster(row))
-                #toolButton.setObjectName("toolButton")
+                p_toolButton.setObjectName("p_toolButton")
+                p_toolButton.setStyleSheet("background-color: white;")
                 p_toolButton_2 = QtWidgets.QToolButton(p_widget)
-                p_toolButton_2.setGeometry(QtCore.QRect(item_width-21, item_height-25, 20, 20))
+                p_toolButton_2.setGeometry(QtCore.QRect(item_width-22, item_height-22, 20, 20))
                 p_toolButton_2.setText("缩")
                 p_toolButton_2.setStyleSheet("font:9pt;")
                 p_toolButton_2.clicked.connect(lambda :self.p_send_thumb(row))
-                #toolButton_2.setObjectName("toolButton_2")
+                p_toolButton_2.setObjectName("p_toolButton_2")
+                p_toolButton_2.setStyleSheet("background-color: white;")
                 p_label = QtWidgets.QLabel(p_widget)
-                p_label.setGeometry(QtCore.QRect(0, 0, item_width, item_height))
+                p_label.setGeometry(QtCore.QRect(pix_pos_x, 0, pix_width, item_height))
                 p_label.setPixmap(pix)
-                #label.setObjectName("label")
+                p_label.setObjectName("p_label")
                 p_label.raise_()
                 p_toolButton.raise_()
                 p_toolButton_2.raise_()
@@ -287,13 +760,15 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
                 self.tableWidget_piclayer.setRowHeight(i,item_height)
                 self.tableWidget_piclayer.setCellWidget(i,j,p_widget)
 
+
+
     def p_send_poster(self, v_index):
         global piclayer_list_data
         button = self.sender()
         p_row = self.tableWidget_piclayer.indexAt(button.parentWidget().pos()).row()
         p_col = self.tableWidget_piclayer.indexAt(button.parentWidget().pos()).column()
-        p_index = p_row*2+p_col
-        #print("v_index/row/col/p_index:"+str(v_index)+":"+str(p_row)+"/"+str(p_col)+"/"+str(p_index))
+        cols = self.tableWidget_piclayer.columnCount()
+        p_index = p_row * cols + p_col
         file_old = piclayer_list_data[v_index][3][p_index]
         file_ext = os.path.splitext(file_old)[-1]
         file_name, ext = os.path.splitext(piclayer_list_data[v_index][0])
@@ -301,12 +776,15 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         shutil.copyfile(file_old,file_name_new)
         myLog.msgSignal.emit("成功导出封面文件: [ "+file_name_new+" ]")
 
+
+
     def p_send_thumb(self, v_index):
         global piclayer_list_data
         button = self.sender()
         p_row = self.tableWidget_piclayer.indexAt(button.parentWidget().pos()).row()
         p_col = self.tableWidget_piclayer.indexAt(button.parentWidget().pos()).column()
-        p_index = p_row * 2 + p_col
+        cols = self.tableWidget_piclayer.columnCount()
+        p_index = p_row * cols + p_col
         file_old = piclayer_list_data[v_index][3][p_index]
         file_ext = os.path.splitext(file_old)[-1]
         file_name, ext = os.path.splitext(piclayer_list_data[v_index][0])
@@ -390,6 +868,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.label_format.setEnabled(isEnable)
         #self.groupBox_hv.setEnabled(isEnable)
         #self.button_addpath.setEnabled(isEnable)
+        self.button_piclayer_open.setEnabled(isEnable)
+        self.button_1button.setEnabled(isEnable)
 
 
     def changeStatus(self,row,status):
@@ -830,6 +1310,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         #    thread.start()
         #for thread in threads:
         #    thread.join()
+        QtWidgets.QApplication.processEvents()
         return True
 
     def d_start_area_getImage(self, i, temp_nums):
@@ -1201,12 +1682,12 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        global pic_Item
+        global pic_Item, piclayer_list_data, v_index
         table_width = self.groupBox_list.width()
         table_height = self.groupBox_list.height()
         self.tableWidget_lists.setFixedSize(table_width, table_height)
-        self.tableWidget_lists.setColumnWidth(0, int((table_width - 258) * 0.50))
-        self.tableWidget_lists.setColumnWidth(1, int((table_width - 258) * 0.50))
+        self.tableWidget_lists.setColumnWidth(0, int((table_width - 265) * 0.50))
+        self.tableWidget_lists.setColumnWidth(1, int((table_width - 265) * 0.50))
         self.tableWidget_lists.setColumnWidth(2, 70)
         self.tableWidget_lists.setColumnWidth(3, 100)
         self.tableWidget_lists.setColumnWidth(4, 58)
@@ -1219,7 +1700,19 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.tableWidget_piclayer.setColumnWidth(1, int(table_width - 235))
         self.toolButton_piclayer.setGeometry(QtCore.QRect(table_width - 20, 0, 20, 20))
         if self.groupBox_5.isHidden() == 0:
-            self.showPics(pic_Item)
+            self.thread_showPics(pic_Item)
+        self.groupBox_6.setGeometry(QtCore.QRect(0, 0, table_width, table_height))
+        self.tableWidget_piclayer2.setGeometry(QtCore.QRect(0, 26, table_width, table_height - 26))
+        self.groupBox_6b.setGeometry(QtCore.QRect(0, 0, table_width, 26))
+        if self.groupBox_6.isHidden() == 0:
+            self.d_set_allpics_refresh()
+        self.groupBox_7.setGeometry(QtCore.QRect(0, 0, table_width, table_height))
+        self.tableWidget_piclayer3.setGeometry(QtCore.QRect(0, 26, table_width, table_height - 26))
+        self.groupBox_7b.setGeometry(QtCore.QRect(0, 0, table_width, 26))
+        if self.groupBox_7.isHidden() == 0:
+            self.show_changepics(v_index)
+
+
 
 
 class MainDiag(QtWidgets.QDialogButtonBox):

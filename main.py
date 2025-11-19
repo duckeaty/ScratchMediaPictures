@@ -4,6 +4,8 @@
 时间：2023.11.08
 v1.3更新：2024.08.04
 v1.4更新：2025.02.21
+v1.5更新：2025.02.22
+v1.6更新：2025.11.19
 """
 
 import configparser
@@ -60,6 +62,8 @@ get_image_frame = 1
 video_list_data = []
 v_poster = "poster"
 v_thumb = "thumb"
+ratio1 = "16/9"
+ratio2 = "9/16"
 
 # [i,video_info]
 # video_info
@@ -116,6 +120,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.button_clear.clicked.connect(lambda: self.thread_it(self.d_clear))
         #self.button_addfile.clicked.connect(lambda: self.thread_it(self.d_addfile))
         self.button_addfile.clicked.connect(self.d_addfile)
+        self.button_ov_confirm.clicked.connect(self.d_setRatio)
         #self.button_addpath.clicked.connect(lambda: self.thread_it(self.d_addpath))
         self.radio_getposter.clicked.connect(lambda: self.radio_frame_click(1))
         self.radio_getframe_num.clicked.connect(lambda: self.radio_frame_click(2))
@@ -182,6 +187,8 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             self.radio_getframe_num.setChecked(False)
             self.radio_getframe_random.setChecked(True)
         self.line_frame_num.setText(str(get_image_frame))
+        self.line_o_h.setText(ratio1)
+        self.line_o_v.setText(ratio2)
         self.table_refresh(1)
         self.setButton_enabled(1)
         self.button_openOutPath.setEnabled(1)
@@ -812,7 +819,7 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
 
     def dataFile_read(self):
-        global file_data_path, perVideo_frames, limit_time1, limit_time2, is_jpg, is_horizon, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data
+        global file_data_path, perVideo_frames, limit_time1, limit_time2, is_jpg, is_horizon, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data, ratio1, ratio2
         #数据读取
         if os.path.exists(file_data_path):
             with open(file_data_path, "r") as file:
@@ -829,11 +836,13 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
                 v_poster = file_data[8]
                 v_thumb = file_data[9]
                 video_list_data = file_data[10]
+                ratio1 = file_data[11]
+                ratio2 = file_data[12]
 
     def dataFile_write(self):
-        global file_data_path, perVideo_frames, limit_time1, limit_time2, is_jpg, is_horizon, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data
+        global file_data_path, perVideo_frames, limit_time1, limit_time2, is_jpg, is_horizon, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data,ratio1, ratio2
         #file_data = []
-        file_data = [perVideo_frames, limit_time1, limit_time2, is_jpg, is_horizon, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data]
+        file_data = [perVideo_frames, limit_time1, limit_time2, is_jpg, is_horizon, out_path_save, get_image_type, get_image_frame, v_poster, v_thumb, video_list_data, ratio1, ratio2]
 
         #数据写入
         with open(file_data_path, "w") as file:
@@ -1373,6 +1382,10 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             QtWidgets.QApplication.processEvents()
 
     def getImage(self, ori_path, out_path, num_random, image_format, image_hv):
+        global ratio1, ratio2
+        ratio1_num = self.getRatio(ratio1)
+        ratio2_num = self.getRatio(ratio2)
+
         video = cv2.VideoCapture(ori_path)
         video.set(cv2.CAP_PROP_POS_FRAMES, num_random)
         save_path = out_path + "/" + str(num_random) + image_format
@@ -1387,31 +1400,31 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         t_width = 0
         t_height = 0
         if image_hv == "h":
-            if v_width / v_height >= 16 / 9:
-                t_width = round(16 / 9 * v_height)
+            if v_width / v_height >= ratio1_num:
+                t_width = round(ratio1_num * v_height)
                 t_height = v_height
             else:
                 t_width = v_width
-                t_height = round(9 / 16 * v_width)
+                t_height = round(ratio2_num * v_width)
             t_x = round((v_width - t_width) / 2)
             t_y = round((v_height - t_height) / 2)
             image_crop_h = image[t_y:(t_height + t_y), t_x:(t_width + t_x)]
         else:
-            if v_width / v_height >= 9 / 16:
-                t_width = round(9 / 16 * v_height)
+            if v_width / v_height >= ratio2_num:
+                t_width = round(ratio2_num * v_height)
                 t_height = v_height
             else:
                 t_width = v_width
-                t_height = round(16 / 9 * v_width)
+                t_height = round(ratio1_num * v_width)
             t_x = round((v_width - t_width) / 2)
             t_y = round((v_height - t_height) / 2)
             image_crop_v = image[t_y:(t_height + t_y), t_x:(t_width + t_x)]
-            if v_width / v_height >= 16 / 9:
-                t_width = round(16 / 9 * v_height)
+            if v_width / v_height >= ratio1_num:
+                t_width = round(ratio1_num * v_height)
                 t_height = v_height
             else:
                 t_width = v_width
-                t_height = round(9 / 16 * v_width)
+                t_height = round(ratio2_num * v_width)
             t_x = round((v_width - t_width) / 2)
             t_y = round((v_height - t_height) / 2)
             image_crop_h = image[t_y:(t_height + t_y), t_x:(t_width + t_x)]
@@ -1617,6 +1630,47 @@ class MainWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.dataFile_write()
         self.tableSignal.emit(1)
         self.setButton_enabled(1)
+
+    def d_setRatio(self):
+        global ratio1, ratio2
+        self.setButton_enabled(0)
+        ratio1_txt = self.line_o_h.text()
+        ratio2_txt = self.line_o_v.text()
+        is_ratio1_back = self.getRatio(ratio1_txt)
+        is_ratio2_back = self.getRatio(ratio2_txt)
+        if is_ratio1_back == 0:
+            self.line_o_h.setText(ratio1)
+        else:
+            ratio1 = ratio1_txt
+        if is_ratio2_back == 0:
+            self.line_o_v.setText(ratio2)
+        else:
+            ratio2 = ratio2_txt
+        self.dataFile_write()
+        self.tableSignal.emit(1)
+        self.setButton_enabled(1)
+
+    def getRatio(self, ratio_str):
+        # 类型校验
+        if ratio_str is None or not isinstance(ratio_str, str):
+            return 0
+
+        # 统一处理空格和多种分隔符
+        cleaned = ratio_str.replace(' ', '').replace('：', '/').replace(':', '/')
+
+        # 分割校验
+        parts = cleaned.split('/')
+        if len(parts) != 2:
+            return 0
+
+        # 数值转换与分母校验
+        try:
+            numerator = float(parts[0])
+            denominator = float(parts[1])
+            return numerator / denominator if denominator != 0 else 0
+        except (ValueError, TypeError):
+            return 0
+
 
     def getRandom(self, num1, num2):
         rand_num = random.randint(num1, num2)

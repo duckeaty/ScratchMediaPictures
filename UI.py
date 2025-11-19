@@ -70,7 +70,7 @@ class Ui_MainWindow(object):
                 """)
         self.groupBox_b12 = QtWidgets.QGroupBox(self.groupBox_b1)
         # self.groupBox_b1.setGeometry(QtCore.QRect(10, 40, 751, 381))
-        self.groupBox_b12.setFixedSize(100, 30)
+        self.groupBox_b12.setFixedSize(220, 30)
         self.groupBox_b12.setTitle("")
         self.groupBox_b12.setObjectName("groupBox_b1")
         self.groupBox_b12.setStyleSheet("""
@@ -106,9 +106,29 @@ class Ui_MainWindow(object):
         self.radioButton_o_h = QtWidgets.QRadioButton(self.groupBox_b12)
         self.radioButton_o_h.setGeometry(QtCore.QRect(30, 7, 41, 16))
         self.radioButton_o_h.setObjectName("radioButton_o_h")
+
+        self.line_o_h = QtWidgets.QLineEdit(self.groupBox_b12)
+        self.line_o_h.setGeometry(QtCore.QRect(60, 7, 40, 16))
+        self.line_o_h.setMaxLength(6)
+        self.line_o_h.setCursorPosition(0)
+        self.line_o_h.setReadOnly(False)
+        self.line_o_h.setObjectName("line_o_h")
+
         self.radioButton_o_v = QtWidgets.QRadioButton(self.groupBox_b12)
-        self.radioButton_o_v.setGeometry(QtCore.QRect(67, 7, 41, 16))
+        self.radioButton_o_v.setGeometry(QtCore.QRect(105, 7, 41, 16))
         self.radioButton_o_v.setObjectName("radioButton_o_v")
+
+        self.line_o_v = QtWidgets.QLineEdit(self.groupBox_b12)
+        self.line_o_v.setGeometry(QtCore.QRect(135, 7, 40, 16))
+        self.line_o_v.setMaxLength(6)
+        self.line_o_v.setCursorPosition(0)
+        self.line_o_v.setReadOnly(False)
+        self.line_o_v.setObjectName("line_o_v")
+
+        self.button_ov_confirm = QtWidgets.QToolButton(self.groupBox_b12)
+        self.button_ov_confirm.setGeometry(QtCore.QRect(180, 7, 30, 16))
+        self.button_ov_confirm.setObjectName("button_ov_confirm")
+
         self.radioButton_o_h.setChecked(True)
 
         self.groupBox_b2 = QtWidgets.QGroupBox(self.groupBox_1)
@@ -539,7 +559,9 @@ class Ui_MainWindow(object):
         MainWindow.setTabOrder(self.button_1button, self.radioButton_png)
         MainWindow.setTabOrder(self.radioButton_png, self.radioButton_jpg)
         MainWindow.setTabOrder(self.radioButton_jpg, self.radioButton_o_h)
+
         MainWindow.setTabOrder(self.radioButton_o_h, self.radioButton_o_v)
+
         MainWindow.setTabOrder(self.radioButton_o_v, self.button_delfiles)
         # MainWindow.setTabOrder(self.button_addpath, self.button_delfiles)
         MainWindow.setTabOrder(self.button_delfiles, self.button_clear)
@@ -559,7 +581,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "视频帧提取器v1.5"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "视频帧提取器v1.6"))
         #self.groupBox.setTitle(_translate("MainWindow", "视频列表"))
         item = self.tableWidget_lists.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "文件"))
@@ -600,6 +622,7 @@ class Ui_MainWindow(object):
         self.radioButton_jpg.setText(_translate("MainWindow", "JPG"))
         self.radioButton_o_h.setText(_translate("MainWindow", "横"))
         self.radioButton_o_v.setText(_translate("MainWindow", "竖"))
+        self.button_ov_confirm.setText(_translate("MainWindow", "确认"))
         self.label_format.setText(_translate("MainWindow", "格式："))
         self.label_hv.setText(_translate("MainWindow", "版式："))
         self.toolButton_piclayer.setText(_translate("MainWindow", "X"))
